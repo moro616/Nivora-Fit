@@ -1,0 +1,462 @@
+/* ============================================================
+   Nivora — hoja de estilos
+   Blanco y negro, como la marca. El color aparece solo cuando
+   significa algo: una medida que mejora, una que preocupa.
+   Pensada para un teléfono con una mano, a media luz, en el gimnasio.
+   ============================================================ */
+
+:root {
+  --f-marca: "Saira", "Archivo", system-ui, sans-serif;
+  --f-body:  "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --f-num:   "IBM Plex Mono", ui-monospace, monospace;
+
+  /* superficie */
+  --bg:      #0B0B0C;
+  --bg-2:    #131315;
+  --card:    #17171A;
+  --card-2:  #1E1E22;
+  --linea:   #2A2A2F;
+  --linea-2: #3A3A42;
+
+  /* tinta */
+  --ink:     #F7F7F8;
+  --ink-2:   #C3C3C9;
+  --muted:   #85858F;
+
+  /* acento: la marca es blanca sobre negro */
+  --acento:     #FFFFFF;
+  --acento-ink: #0B0B0C;
+
+  /* semánticos */
+  --bien:  #4ADE80;
+  --aviso: #FBBF24;
+  --bad:   #F87171;
+
+  --r:   16px;
+  --r-s: 11px;
+  --sombra: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+  --gutter: 16px;
+}
+
+:root[data-theme="claro"] {
+  --bg: #FBFBFC; --bg-2: #F2F2F4; --card: #FFFFFF; --card-2: #F4F4F6;
+  --linea: #E4E4E8; --linea-2: #D2D2D9;
+  --ink: #0B0B0C; --ink-2: #33333A; --muted: #75757F;
+  --acento: #0B0B0C; --acento-ink: #FFFFFF;
+  --bien: #167C4A; --aviso: #9A6400; --bad: #B4231F;
+  --sombra: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.06);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="oscuro"]) {
+    --bg: #FBFBFC; --bg-2: #F2F2F4; --card: #FFFFFF; --card-2: #F4F4F6;
+    --linea: #E4E4E8; --linea-2: #D2D2D9;
+    --ink: #0B0B0C; --ink-2: #33333A; --muted: #75757F;
+    --acento: #0B0B0C; --acento-ink: #FFFFFF;
+    --bien: #167C4A; --aviso: #9A6400; --bad: #B4231F;
+    --sombra: 0 1px 2px rgba(0,0,0,.05), 0 8px 24px rgba(0,0,0,.06);
+  }
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+/* El atributo hidden tiene que ganarle a cualquier display de más abajo. */
+[hidden] { display: none !important; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(76px + env(safe-area-inset-bottom));
+}
+
+#app { max-width: 620px; margin: 0 auto; padding: 0 var(--gutter); }
+
+h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
+
+/* ---------- barra de arriba ---------- */
+.topbar {
+  position: sticky; top: 0; z-index: 30;
+  display: flex; align-items: center; gap: 11px;
+  padding: calc(12px + env(safe-area-inset-top)) 0 12px;
+  background: linear-gradient(var(--bg) 72%, transparent);
+}
+.avatar {
+  width: 38px; height: 38px; flex: 0 0 38px; border-radius: 50%;
+  border: 1px solid var(--linea-2); background: var(--card);
+  color: var(--ink); font-family: var(--f-marca); font-weight: 600; font-size: 13px;
+  letter-spacing: .04em; cursor: pointer;
+}
+.avatar:active { transform: scale(.95); }
+.who { flex: 1; min-width: 0; line-height: 1.25; }
+.who b {
+  display: block; font-family: var(--f-marca); font-weight: 600;
+  font-size: 15px; letter-spacing: .06em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.who small { display: block; color: var(--muted); font-size: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.iconbtn {
+  width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--linea-2); background: var(--card); cursor: pointer;
+}
+.iconbtn svg { width: 19px; height: 19px; fill: none; stroke: var(--ink);
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.chip {
+  font-size: 10.5px; color: var(--muted); border: 1px solid var(--linea);
+  border-radius: 999px; padding: 4px 9px; white-space: nowrap;
+  max-width: 130px; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---------- tipografía suelta ---------- */
+.eyebrow {
+  font-family: var(--f-num); font-size: 10.5px; letter-spacing: .13em;
+  text-transform: uppercase; color: var(--muted); margin: 0;
+}
+.titulo { font-size: 27px; font-weight: 800; line-height: 1.12; margin: 8px 0 8px; }
+.titulo.chico { font-size: 21px; margin: 6px 0; }
+.bajada { color: var(--ink-2); margin: 0 0 18px; font-size: 14.5px; }
+.cuerpo { color: var(--ink-2); margin: 0 0 12px; }
+.sm { font-size: 12.5px; }
+.muted { color: var(--muted); }
+.vacio { color: var(--muted); font-size: 13.5px; padding: 18px 2px; margin: 0; }
+.vacio.chico { padding: 8px 0 0; }
+.t-bien { color: var(--bien); } .t-aviso { color: var(--aviso); }
+.t-mal { color: var(--bad); } .t-neutro { color: var(--muted); }
+
+/* ---------- tarjetas ---------- */
+.card { background: var(--card); border: 1px solid var(--linea); border-radius: var(--r); }
+.card.pad { padding: 17px; }
+
+.hero {
+  background: var(--card); border: 1px solid var(--linea); border-radius: var(--r);
+  padding: 19px 17px; box-shadow: var(--sombra);
+}
+.hero h2 { font-size: 26px; font-weight: 800; margin: 7px 0 0; }
+.hero.corriendo { border-color: var(--linea-2); }
+
+.datos { display: flex; gap: 8px; margin-top: 16px; }
+.datos > div {
+  flex: 1; background: var(--card-2); border-radius: var(--r-s);
+  padding: 10px 8px; text-align: center; min-width: 0;
+}
+.datos b { display: block; font-family: var(--f-num); font-size: 18px; font-weight: 600; }
+.datos span { display: block; font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.datos.grande b { font-size: 23px; }
+
+.warns { margin: 10px 0 0; padding: 0 0 0 17px; color: var(--ink-2); font-size: 13.5px; }
+.warns li { margin: 5px 0; }
+
+.linea-acciones { display: flex; gap: 18px; justify-content: center; margin-top: 13px; }
+.linkbtn {
+  background: none; border: 0; color: var(--muted); font-family: var(--f-body);
+  font-size: 12.5px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer;
+}
+.linkbtn:active { color: var(--ink); }
+
+/* ---------- botones ---------- */
+.btn {
+  appearance: none; border: 1px solid transparent; border-radius: 12px;
+  background: var(--acento); color: var(--acento-ink);
+  font-family: var(--f-body); font-size: 15px; font-weight: 600;
+  padding: 13px 20px; cursor: pointer; text-align: center; text-decoration: none;
+  display: inline-block; transition: transform .1s ease, opacity .15s ease;
+}
+.btn:active { transform: scale(.985); }
+.btn[disabled] { opacity: .5; }
+.btn.block { display: block; width: 100%; }
+.btn.ghost { background: transparent; color: var(--ink); border-color: var(--linea-2); }
+.btn.ghost.peligro { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 40%, transparent); }
+
+/* ---------- formularios ---------- */
+.field { margin-bottom: 14px; }
+.field label, .lbl {
+  display: block; font-size: 12.5px; font-weight: 600; color: var(--ink-2); margin-bottom: 6px;
+}
+.field label small, .lbl small { display: block; font-weight: 400; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.field input, .chat-form input {
+  width: 100%; background: var(--bg-2); border: 1px solid var(--linea);
+  border-radius: var(--r-s); color: var(--ink); font-family: var(--f-body);
+  font-size: 16px; padding: 12px 13px;
+}
+.field input:focus, .chat-form input:focus { outline: 2px solid var(--linea-2); outline-offset: 1px; }
+.dos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.ops { display: flex; flex-direction: column; gap: 8px; }
+.op {
+  text-align: left; background: var(--card-2); border: 1px solid var(--linea);
+  border-radius: var(--r-s); padding: 12px 13px; color: var(--ink);
+  font-family: var(--f-body); cursor: pointer; transition: border-color .15s ease;
+}
+.op b { display: block; font-size: 14.5px; font-weight: 600; }
+.op small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+.op.activo { border-color: var(--ink); background: var(--card); box-shadow: inset 0 0 0 1px var(--ink); }
+.op.chico { text-align: center; padding: 13px 6px; }
+.op.chico b { font-family: var(--f-num); font-size: 16px; }
+.repgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+
+/* ---------- alta de perfil ---------- */
+.progreso-alta { height: 3px; background: var(--linea); border-radius: 2px; margin: 4px 0 18px; overflow: hidden; }
+.progreso-alta i { display: block; height: 100%; background: var(--ink); transition: width .25s ease; }
+.alta-botones { display: flex; justify-content: space-between; gap: 12px; margin: 20px 0 8px; }
+.alta-botones .btn { flex: 1; }
+
+/* ---------- listas de ejercicios ---------- */
+.exlist { display: flex; flex-direction: column; gap: 7px; }
+.exrow {
+  display: flex; align-items: center; gap: 12px; width: 100%; text-align: left;
+  background: var(--card); border: 1px solid var(--linea); border-radius: var(--r-s);
+  padding: 12px 13px; color: var(--ink); font-family: var(--f-body); cursor: pointer;
+}
+.exrow.estatico { cursor: default; }
+.exrow.marcado { border-color: var(--ink); }
+.exnum {
+  flex: 0 0 30px; height: 30px; display: grid; place-items: center;
+  background: var(--card-2); border-radius: 8px;
+  font-family: var(--f-num); font-size: 12.5px; color: var(--ink-2);
+}
+.exnum.mini { font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.extxt { flex: 1; min-width: 0; }
+.extxt b { display: block; font-size: 14.5px; font-weight: 600;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.extxt small { display: block; color: var(--muted); font-size: 11.5px; }
+.exver {
+  flex: 0 0 auto; font-size: 10.5px; color: var(--muted); letter-spacing: .06em;
+  text-transform: uppercase; background: none; border: 0; font-family: var(--f-body); cursor: pointer;
+}
+
+.chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 12px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chipx {
+  flex: 0 0 auto; border: 1px solid var(--linea); background: var(--card);
+  border-radius: 999px; padding: 7px 13px; color: var(--ink-2);
+  font-family: var(--f-body); font-size: 12.5px; cursor: pointer; white-space: nowrap;
+}
+.chipx.activo { background: var(--acento); color: var(--acento-ink); border-color: var(--acento); }
+
+/* ---------- entrenamiento en curso ---------- */
+.barra { height: 4px; background: var(--linea); border-radius: 2px; margin-top: 14px; overflow: hidden; }
+.barra i { display: block; height: 100%; background: var(--ink); transition: width .3s ease; }
+
+.sesion { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.strow { background: var(--card); border: 1px solid var(--linea); border-radius: var(--r); padding: 14px; }
+.strow.listo { border-color: color-mix(in srgb, var(--bien) 45%, var(--linea)); }
+.sthead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+.sthead b { font-size: 15px; font-weight: 600; }
+.sthead small { display: block; color: var(--muted); font-size: 11.5px; margin-top: 2px; }
+
+.peso { display: flex; align-items: center; gap: 12px; margin: 12px 0 0; }
+.peso span { font-size: 12.5px; color: var(--muted); }
+.peso b { font-family: var(--f-num); font-size: 17px; color: var(--ink); }
+.pbtn {
+  width: 34px; height: 34px; border-radius: 9px; border: 1px solid var(--linea-2);
+  background: var(--card-2); color: var(--ink); font-size: 18px; line-height: 1; cursor: pointer;
+}
+
+.series { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 12px; }
+.serie {
+  min-width: 46px; height: 42px; padding: 0 10px; border-radius: 10px;
+  border: 1px dashed var(--linea-2); background: transparent; color: var(--muted);
+  font-family: var(--f-num); font-size: 14px; cursor: pointer;
+}
+.serie.ok { border-style: solid; border-color: var(--ink); background: var(--ink); color: var(--bg); }
+
+.descanso {
+  position: fixed; left: 50%; transform: translateX(-50%);
+  bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 40;
+  display: flex; align-items: center; gap: 14px;
+  background: var(--card); border: 1px solid var(--linea-2); border-radius: 999px;
+  padding: 9px 9px 9px 17px; box-shadow: var(--sombra);
+  font-family: var(--f-num); font-size: 13.5px;
+}
+.descanso .linkbtn { text-decoration: none; background: var(--card-2);
+  border-radius: 999px; padding: 6px 13px; color: var(--ink); font-family: var(--f-body); }
+
+/* ---------- cuerpo y progreso ---------- */
+.medallas { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+.med { background: var(--card-2); border-radius: var(--r-s); padding: 12px 10px; text-align: center; min-width: 0; }
+.med span { display: block; font-size: 10.5px; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
+.med b { display: block; font-family: var(--f-num); font-size: 21px; font-weight: 600; margin: 3px 0 2px; }
+.med i { display: block; font-style: normal; font-size: 10.5px; color: var(--muted); line-height: 1.25; }
+
+.macros { display: flex; gap: 8px; margin-top: 14px; }
+.macros > div { flex: 1; background: var(--card-2); border-radius: var(--r-s); padding: 11px 8px; text-align: center; }
+.macros b { display: block; font-family: var(--f-num); font-size: 16px; }
+.macros span { display: block; font-size: 10.5px; color: var(--muted); }
+
+.semana { display: flex; gap: 6px; margin-top: 14px; }
+.semana span {
+  flex: 1; text-align: center; padding: 9px 0; border-radius: 9px;
+  background: var(--card-2); color: var(--muted); font-size: 12px; font-weight: 600;
+}
+.semana span.on { background: var(--ink); color: var(--bg); }
+
+.graf-head { display: flex; align-items: center; justify-content: space-between; }
+.delta { font-family: var(--f-num); font-size: 12px; color: var(--muted); }
+.delta.baja { color: var(--bien); } .delta.sube { color: var(--ink-2); }
+.graf { width: 100%; height: 96px; margin: 12px 0 6px; overflow: visible; }
+.graf-linea { fill: none; stroke: var(--ink); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.graf-area { fill: color-mix(in srgb, var(--ink) 9%, transparent); stroke: none; }
+.graf-punto { fill: var(--bg); stroke: var(--ink); stroke-width: 1.6; vector-effect: non-scaling-stroke; }
+.graf-pie { display: flex; justify-content: space-between; font-size: 10.5px; color: var(--muted); font-family: var(--f-num); }
+
+/* ---------- barra de pestañas ---------- */
+.tabbar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 35;
+  display: flex; gap: 2px; justify-content: center;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--linea);
+  padding: 8px var(--gutter) calc(8px + env(safe-area-inset-bottom));
+}
+.tabbar button {
+  flex: 1; max-width: 110px; background: none; border: 0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  color: var(--muted); font-family: var(--f-body); font-size: 10.5px; padding: 5px 0;
+}
+.tabbar svg { width: 21px; height: 21px; fill: none; stroke: currentColor;
+  stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.tabbar [aria-selected="true"] { color: var(--ink); }
+
+/* ---------- panel deslizante ---------- */
+.sheet-wrap { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.sheet-wrap .scrim {
+  position: absolute; inset: 0; background: rgba(0,0,0,.6);
+  opacity: 0; transition: opacity .22s ease;
+}
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: var(--bg-2); border-top: 1px solid var(--linea-2);
+  border-radius: 20px 20px 0 0; max-height: 88vh; overflow-y: auto;
+  transform: translateY(102%); transition: transform .26s cubic-bezier(.22,.9,.3,1);
+}
+.sheet-inner { max-width: 620px; margin: 0 auto; padding: 18px var(--gutter) calc(26px + env(safe-area-inset-bottom)); }
+.sheet-wrap.abierto { pointer-events: auto; }
+.sheet-wrap.abierto .scrim { opacity: 1; }
+.sheet-wrap.abierto .sheet { transform: translateY(0); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.sheet-head h3 { font-size: 19px; font-weight: 700; }
+.xbtn {
+  width: 32px; height: 32px; flex: 0 0 32px; border-radius: 50%;
+  border: 1px solid var(--linea-2); background: var(--card); color: var(--ink);
+  font-size: 13px; cursor: pointer;
+}
+
+.ojo {
+  background: var(--card-2); border-left: 2px solid var(--aviso);
+  border-radius: 0 var(--r-s) var(--r-s) 0; padding: 12px 14px; margin: 14px 0;
+}
+.ojo.bien { border-left-color: var(--bien); }
+.ojo b { display: block; font-size: 12.5px; margin-bottom: 4px; }
+.ojo p { margin: 0; color: var(--ink-2); font-size: 13.5px; }
+
+/* ---------- dibujos de los movimientos ---------- */
+.dibujo { background: var(--card); border: 1px solid var(--linea); border-radius: var(--r); padding: 10px; margin: 14px 0; }
+.dibujo svg { width: 100%; height: auto; display: block; }
+.dibujo .body, .dibujo .head { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
+.dibujo .head { fill: var(--card); }
+.dibujo .gear { stroke: var(--ink-2); stroke-width: 3.4; stroke-linecap: round; fill: none; }
+.dibujo .gearfill { fill: var(--ink-2); }
+.dibujo .floor { stroke: var(--linea-2); stroke-width: 2; }
+.dibujo .bench { stroke: var(--linea-2); stroke-width: 5; stroke-linecap: round; fill: none; }
+.dibujo .thin { stroke: var(--linea-2); stroke-width: 2; fill: none; stroke-linecap: round; }
+.dibujo .arrow { stroke: var(--muted); stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.poses { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
+.poses p { margin: 0; font-size: 11.5px; color: var(--muted); display: flex; gap: 6px; }
+.poses b {
+  flex: 0 0 17px; height: 17px; border-radius: 50%; background: var(--card-2);
+  color: var(--ink-2); display: grid; place-items: center; font-size: 10px; font-family: var(--f-num);
+}
+
+/* ---------- chat del entrenador ---------- */
+.chat { display: flex; flex-direction: column; gap: 9px; max-height: 46vh; overflow-y: auto; padding: 6px 0 10px; }
+.chat-vacio { color: var(--ink-2); font-size: 14px; }
+.burbuja { max-width: 84%; padding: 10px 13px; border-radius: 15px; font-size: 14px; line-height: 1.45; }
+.burbuja.mia { align-self: flex-end; background: var(--acento); color: var(--acento-ink); border-bottom-right-radius: 5px; }
+.burbuja.suya { align-self: flex-start; background: var(--card); border: 1px solid var(--linea); border-bottom-left-radius: 5px; }
+.burbuja.escribiendo { display: flex; gap: 4px; padding: 14px; }
+.burbuja.escribiendo i { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); animation: pulso 1.1s infinite; }
+.burbuja.escribiendo i:nth-child(2) { animation-delay: .18s; }
+.burbuja.escribiendo i:nth-child(3) { animation-delay: .36s; }
+@keyframes pulso { 0%, 60%, 100% { opacity: .3; } 30% { opacity: 1; } }
+
+.chat-sug { display: flex; gap: 7px; overflow-x: auto; padding: 4px 0 10px; scrollbar-width: none; }
+.chat-sug::-webkit-scrollbar { display: none; }
+.chat-sug button {
+  flex: 0 0 auto; border: 1px solid var(--linea); background: var(--card);
+  border-radius: 999px; padding: 7px 13px; color: var(--ink-2);
+  font-family: var(--f-body); font-size: 12.5px; cursor: pointer; white-space: nowrap;
+}
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; }
+.chat-form .btn { flex: 0 0 48px; padding: 12px 0; }
+
+/* ---------- avisos ---------- */
+.toast {
+  position: fixed; left: 50%; transform: translate(-50%, 18px);
+  bottom: calc(92px + env(safe-area-inset-bottom)); z-index: 60;
+  background: var(--ink); color: var(--bg); border-radius: 999px;
+  padding: 10px 18px; font-size: 13px; max-width: 88vw; text-align: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+.toast.ver { opacity: 1; transform: translate(-50%, 0); }
+
+@media (min-width: 560px) {
+  .titulo { font-size: 31px; }
+  .medallas { gap: 10px; }
+}
+
+/* ---------- pantallas grandes ----------
+   En la tablet y en la compu no queremos una columna de teléfono estirada:
+   el contenido respira un poco más y la barra de abajo se vuelve una píldora
+   flotante, que es lo que espera alguien con mouse. */
+@media (min-width: 760px) {
+  #app { max-width: 690px; }
+  .chip { max-width: 230px; font-size: 11.5px; }
+  body { padding-bottom: 108px; }
+
+  .tabbar {
+    left: 50%; right: auto; transform: translateX(-50%);
+    bottom: 18px; width: auto; gap: 4px;
+    border: 1px solid var(--linea); border-radius: 999px;
+    background: color-mix(in srgb, var(--card) 92%, transparent);
+    box-shadow: var(--sombra);
+    padding: 7px 12px;
+  }
+  .tabbar button { min-width: 86px; padding: 6px 4px; }
+
+  .sheet {
+    left: 50%; bottom: 18px; width: min(640px, 92vw);
+    border: 1px solid var(--linea-2); border-radius: 20px;
+    transform: translate(-50%, calc(100% + 30px));
+  }
+  .sheet-wrap.abierto .sheet { transform: translate(-50%, 0); }
+  .descanso { bottom: 100px; }
+  .toast { bottom: 108px; }
+
+  .dibujo { padding: 16px 24px; }
+  .repgrid { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1100px) {
+  #app { max-width: 740px; }
+}
+
+/* Teléfonos angostos: que nada empuje la pantalla para el costado. */
+@media (max-width: 359px) {
+  :root { --gutter: 12px; }
+  .titulo { font-size: 24px; }
+  .hero h2 { font-size: 22px; }
+  .datos b { font-size: 16px; }
+  .med b { font-size: 18px; }
+  .tabbar button { font-size: 9.5px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

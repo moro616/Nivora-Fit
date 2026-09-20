@@ -1,0 +1,35 @@
+# ============================================================
+# Configuración de Netlify
+# ============================================================
+[build]
+  publish  = "public"
+  functions = "netlify/functions"
+  # Inyecta las variables públicas en config.js durante el build,
+  # para no tener que tocar el archivo a mano en cada ambiente.
+  command  = "node scripts/generar-config.js"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[functions]
+  node_bundler = "esbuild"
+
+# La app es de una sola página: todo lo que no sea un archivo real va al index.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Cabeceras de seguridad
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=3600"

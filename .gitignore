@@ -1,0 +1,17 @@
+# generado en cada build, nunca versionado
+public/config.js
+
+# secretos
+.env
+.env.*
+!.env.example
+
+node_modules/
+.netlify/
+dist/
+
+# basura del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log

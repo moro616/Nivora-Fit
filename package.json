@@ -1,0 +1,18 @@
+{
+  "name": "nivora-fit",
+  "version": "1.0.0",
+  "description": "Entrenador personal con rutinas adaptadas y evaluación corporal. Suscripción mensual con Mercado Pago.",
+  "private": true,
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "node scripts/generar-config.js",
+    "deploy": "netlify deploy --prod"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "engines": { "node": ">=20" }
+}
