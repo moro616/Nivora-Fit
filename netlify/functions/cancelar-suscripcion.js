@@ -3,7 +3,7 @@
    Dar de baja tiene que ser tan fácil como suscribirse. Además de ser
    lo correcto, una baja difícil termina en contracargos y en malas reseñas.
    ============================================================ */
-const { admin, usuarioDelToken, json, mp } = require("./_comun");
+const { admin, usuarioDelToken, json, mp } = require("../lib/comun");
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "método no permitido" });

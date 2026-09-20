@@ -8,7 +8,7 @@
       navegador: nadie puede mentir sobre sus propios datos.
    3. Podemos cortar el acceso a quien no está suscripto.
    ============================================================ */
-const { admin, usuarioDelToken, json } = require("./_comun");
+const { admin, usuarioDelToken, json } = require("../lib/comun");
 
 const LIMITE_POR_DIA = Number(process.env.CHAT_LIMITE_DIARIO || 40);
 

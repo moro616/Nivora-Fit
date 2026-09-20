@@ -3,7 +3,13 @@
    Crea la suscripción con débito automático en Mercado Pago y devuelve
    el link al que hay que mandar al usuario para que la autorice.
    ============================================================ */
-const { admin, usuarioDelToken, json, mp } = require("./_comun");
+const { admin, usuarioDelToken, json, mp } = require("../lib/comun");
+
+/* La raíz del sitio sale de URL_APP si la cargaste; si no, de la variable URL
+   que Netlify pone sola (y que cambia sola cuando conectás el dominio propio).
+   La app vive en /app/: ahí tiene que volver la persona después de pagar. */
+const urlDeLaApp = () =>
+  (process.env.URL_APP || process.env.URL || "").replace(/\/+$/, "") + "/app/";
 
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "método no permitido" });
@@ -29,10 +35,10 @@ exports.handler = async (event) => {
     const suscripcion = await mp("/preapproval", {
       method: "POST",
       body: JSON.stringify({
-        reason: (process.env.APP_NOMBRE || "Nivora") + " — plan mensual",
+        reason: (process.env.APP_NOMBRE || "Nivora Fit") + " — plan mensual",
         external_reference: usuario.id,          // así el webhook sabe de quién es
         payer_email: usuario.email,
-        back_url: process.env.URL_APP + "/?suscripcion=ok",
+        back_url: urlDeLaApp() + "?suscripcion=ok",
         status: "pending",
         auto_recurring: {
           frequency: 1,

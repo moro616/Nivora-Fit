@@ -8,7 +8,7 @@
    Mercado Pago reintenta y se acumulan notificaciones repetidas.
    ============================================================ */
 const crypto = require("crypto");
-const { admin, json, mp } = require("./_comun");
+const { admin, json, mp } = require("../lib/comun");
 
 /* Verifica la firma del webhook (x-signature). Evita que cualquiera
    nos mande una notificación falsa diciendo que pagó. */

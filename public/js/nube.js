@@ -12,6 +12,10 @@ const SB = HAY_NUBE ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.S
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 }) : null;
 
+/* Los links de los mails (confirmar cuenta, recuperar contraseña) tienen que
+   llevar a la app, que vive en /app/, y no a la landing. */
+const urlDeLaApp = () => (CONFIG.URL_APP || location.origin).replace(/\/+$/, "") + "/app/";
+
 const Cuenta = {
   usuario: null,      // { id, email }
   perfil: null,       // fila de la tabla perfiles
@@ -168,7 +172,7 @@ function mostrarAcceso(modo) {
     boton.disabled = true; boton.textContent = "Un segundo..."; err("");
     try {
       const r = registro
-        ? await SB.auth.signUp({ email, password: pass })
+        ? await SB.auth.signUp({ email, password: pass, options: { emailRedirectTo: urlDeLaApp() } })
         : await SB.auth.signInWithPassword({ email, password: pass });
       if (r.error) throw r.error;
       if (registro && !r.data.session) {
@@ -191,7 +195,7 @@ function mostrarAcceso(modo) {
   if (olvide) olvide.onclick = async () => {
     const email = document.getElementById("ac-email").value.trim();
     if (!email) return err("Escribí tu correo primero y volvé a tocar.");
-    await SB.auth.resetPasswordForEmail(email, { redirectTo: CONFIG.URL_APP });
+    await SB.auth.resetPasswordForEmail(email, { redirectTo: urlDeLaApp() });
     err(""); toast("Te mandamos un correo para recuperar la contraseña.");
   };
 }
