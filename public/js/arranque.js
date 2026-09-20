@@ -94,6 +94,7 @@ function conectarTabs() {
 async function arrancar() {
   conectarTabs();
   aplicarTema();
+  Instalar.alCambiar(refrescarInstalar);
 
   if (!HAY_NUBE) {
     /* Modo local: la app funciona igual, pero los datos viven solo en este
@@ -102,7 +103,7 @@ async function arrancar() {
     aplicarTema();
     ocultarPantallasDeCuenta();
     pintar();
-    estadoGuardado("Guardado en este dispositivo");
+    estadoGuardado("Guardado en el teléfono");
     return;
   }
 

@@ -3,81 +3,443 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Nivora Fit — tu entrenador personal</title>
-<meta name="description" content="Rutina de gimnasio adaptada a tu cuerpo, tu nivel y tus días. Evaluación corporal con grasa corporal, calorías y seguimiento de medidas.">
+<title>Nivora Fit — tu rutina de gimnasio, armada para tu cuerpo</title>
+<meta name="description" content="Nivora Fit te dice qué entrenar hoy, con cuánto peso y cómo se hace cada ejercicio. Se adapta a tu nivel, tu objetivo y los días que realmente podés ir. 7 días gratis, sin tarjeta.">
 <meta name="theme-color" content="#0B0B0C">
-<link rel="manifest" href="/manifest.json">
+<meta name="color-scheme" content="dark light">
+<link rel="canonical" href="https://nivorafit.com/">
 <link rel="icon" href="/icono.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/icono-180.png">
+<link rel="manifest" href="/manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Nivora Fit">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta property="og:title" content="Nivora Fit">
-<meta property="og:description" content="Tu entrenador personal: rutina adaptada a tu cuerpo y evaluación corporal completa.">
+
+<!-- El tema se decide antes de pintar, para que no parpadee al cargar. -->
+<script>
+(function () {
+  var t = "auto";
+  try { t = localStorage.getItem("nivora.tema") || "auto"; } catch (e) {}
+  var claro = window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches;
+  var ef = t === "auto" ? (claro ? "claro" : "oscuro") : t;
+  var r = document.documentElement;
+  if (t !== "auto") r.setAttribute("data-theme", t);
+  r.setAttribute("data-tema-efectivo", ef);
+})();
+</script>
+
 <meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira:wght@500;600;800&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/estilos.css">
+<meta property="og:title" content="Nivora Fit — tu rutina de gimnasio, armada para tu cuerpo">
+<meta property="og:description" content="Qué entrenar hoy, con cuánto peso y cómo se hace cada ejercicio. Se adapta a tus días y a tu nivel. 7 días gratis, sin tarjeta.">
+<meta property="og:image" content="/marca/nivora-fit-blanco.png">
+<meta property="og:locale" content="es_AR">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="preload" href="/fuentes/saira-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fuentes/plex-sans-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/fuentes.css">
+<link rel="stylesheet" href="/landing.css">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Nivora Fit",
+  "applicationCategory": "HealthApplication",
+  "operatingSystem": "Web, Android, iOS",
+  "inLanguage": "es-AR",
+  "description": "App de entrenamiento que arma la rutina del día según tu cuerpo, tu nivel y los días que podés ir al gimnasio, con evaluación corporal y guía de cada ejercicio.",
+  "offers": {
+    "@type": "Offer",
+    "price": "10000",
+    "priceCurrency": "ARS",
+    "description": "Plan mensual con 7 días de prueba gratis sin tarjeta"
+  }
+}
+</script>
 </head>
 <body>
 
-<div id="app">
-  <header class="topbar">
-    <button class="avatar" id="btn-avatar" aria-label="Abrir ajustes y perfil"></button>
-    <div class="who" id="who"></div>
-    <button class="iconbtn" id="btn-chat" aria-label="Hablar con el entrenador" hidden>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.2A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14.5h4"/></svg>
-    </button>
-    <div class="chip" id="chip">—</div>
-  </header>
+<header class="barra" id="barra">
+  <div class="envoltura">
+    <a class="marca" href="/" aria-label="Nivora Fit, inicio">
+      <img src="/marca/nivora-fit-blanco.png" alt="Nivora Fit" width="900" height="245">
+    </a>
+    <nav>
+      <a class="texto" href="#como-funciona">Cómo funciona</a>
+      <a class="texto" href="#instalar">Instalar</a>
+      <a class="texto" href="#precio">Precio</a>
+      <button class="tema" id="btn-tema" type="button" aria-label="Cambiar entre modo claro y oscuro">
+        <svg class="luna" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+        <svg class="sol" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <a class="btn chico" href="/app/">Probar gratis</a>
+    </nav>
+  </div>
+</header>
 
-  <section class="view" id="v-acceso" hidden></section>
-  <section class="view" id="v-muro" hidden></section>
-  <section class="view" id="v-setup" hidden></section>
-  <section class="view" id="v-hoy" hidden></section>
-  <section class="view" id="v-agenda" hidden></section>
-  <section class="view" id="v-ejercicios" hidden>
-    <p class="eyebrow" style="margin-bottom:9px">Biblioteca · tocá cualquiera para ver cómo se hace</p>
-    <div class="chips" id="lib-chips"></div>
-    <div class="exlist" id="lib-list"></div>
+<main>
+
+  <!-- ---------------- portada ---------------- -->
+  <section class="portada">
+    <div class="envoltura">
+      <div>
+        <p class="eyebrow">Entrenamiento con cabeza</p>
+        <h1>Llegá al gimnasio sabiendo exactamente qué hacer.</h1>
+        <p class="entrada">Nivora Fit te arma la rutina del día según tu cuerpo, tu nivel y los
+          días que realmente podés ir. Te dice qué músculo toca, con cuánto peso arrancar y cómo
+          se hace cada ejercicio.</p>
+        <div class="acciones">
+          <a class="btn" href="/app/">Empezar mis 7 días gratis</a>
+          <a class="btn fantasma" href="#como-funciona">Ver cómo funciona</a>
+        </div>
+        <p class="garantia">Sin tarjeta para probar. Después <b>$10.000 por mes</b> y cancelás cuando quieras.</p>
+      </div>
+      <div class="telefono aparece">
+        <img src="/capturas/app-hoy.png" alt="La pantalla Hoy de Nivora Fit: muestra el bloque de cuerpo completo que toca, la duración estimada y la lista de ejercicios con el peso sugerido." width="560" height="1204" fetchpriority="high">
+      </div>
+    </div>
   </section>
-  <section class="view" id="v-cuerpo" hidden></section>
-  <section class="view" id="v-progreso" hidden></section>
-</div>
 
-<nav class="tabbar" id="tabbar" role="tablist" hidden>
-  <button role="tab" data-tab="hoy" aria-selected="true">
-    <svg viewBox="0 0 24 24"><path d="M6.5 9v6M17.5 9v6M4 10.5v3M20 10.5v3M6.5 12h11"/></svg>Hoy</button>
-  <button role="tab" data-tab="agenda" aria-selected="false">
-    <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</button>
-  <button role="tab" data-tab="ejercicios" aria-selected="false">
-    <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="1.7"/><circle cx="15" cy="12" r="1.7"/><circle cx="10" cy="18" r="1.7"/></svg>Ejercicios</button>
-  <button role="tab" data-tab="cuerpo" aria-selected="false">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="4.6" r="2.4"/><path d="M12 7.2v6.5M7.5 9.5h9M9.6 13.7 8.4 20M14.4 13.7 15.6 20"/></svg>Cuerpo</button>
-  <button role="tab" data-tab="progreso" aria-selected="false">
-    <svg viewBox="0 0 24 24"><path d="M4 19V10M10 19V5M16 19v-6M22 19H2"/></svg>Progreso</button>
-</nav>
+  <!-- ---------------- el problema ---------------- -->
+  <section class="linea-arriba">
+    <div class="envoltura">
+      <p class="eyebrow">Por qué existe</p>
+      <h2 class="titular">Ir al gimnasio es fácil. Saber qué hacer adentro, no.</h2>
+      <div class="dolores">
+        <div class="dolor aparece">
+          <h3>Llegás y no sabés a qué máquina ir</h3>
+          <p>Terminás repitiendo los tres ejercicios que ya conocés y dejás medio cuerpo sin entrenar.</p>
+        </div>
+        <div class="dolor aparece">
+          <h3>No tenés días fijos</h3>
+          <p>El trabajo manda. Una semana vas dos veces y la otra cuatro, y cualquier rutina de lunes a viernes se te cae sola.</p>
+        </div>
+        <div class="dolor aparece">
+          <h3>No sabés si estás avanzando</h3>
+          <p>Sin registro de cuánto levantaste ni de cómo cambió tu cuerpo, cuesta darse cuenta de si vale la pena seguir.</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<div class="sheet-wrap" id="sheet-wrap">
-  <div class="scrim" id="scrim"></div>
-  <div class="sheet"><div class="sheet-inner" id="sheet-body"></div></div>
-</div>
-<div class="toast" id="toast"></div>
-<input type="file" id="photo-input" accept="image/*" hidden>
+  <!-- ---------------- cómo funciona ---------------- -->
+  <section class="linea-arriba" id="como-funciona">
+    <div class="envoltura">
+      <p class="eyebrow">Cómo funciona</p>
+      <h2 class="titular">Tres pasos y ya estás entrenando.</h2>
+      <p class="entradilla">No hace falta que sepas de series, repeticiones ni de qué es un
+        empuje horizontal. De eso se encarga la app.</p>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-<!-- Valores por defecto: si todavía no corriste el build, la app igual abre
-     y guarda todo en el teléfono. config.js los pisa en producción. -->
-<script>window.CONFIG = { APP_NOMBRE: "Nivora Fit", URL_APP: location.origin,
-  SUPABASE_URL: "", SUPABASE_ANON_KEY: "", PRECIO_MENSUAL: 10000, MONEDA: "ARS", DIAS_PRUEBA: 7 };</script>
-<script src="/config.js" onerror="void 0"></script>
-<script src="/js/dibujos.js"></script>
-<script src="/js/ejercicios.js"></script>
-<script src="/js/cuerpo.js"></script>
-<script src="/js/motor.js"></script>
-<script src="/js/interfaz.js"></script>
-<script src="/js/entrenador.js"></script>
-<script src="/js/nube.js"></script>
-<script src="/js/arranque.js"></script>
+      <div class="rejilla tres">
+        <div class="tarjeta aparece">
+          <span class="numero">PASO 01</span>
+          <h3>Contás quién sos</h3>
+          <p>Seis preguntas: altura, peso, experiencia, qué querés lograr, cuántos días podés ir
+            y si hay algo que te moleste. Dos minutos.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <span class="numero">PASO 02</span>
+          <h3>Abrís la app en el gimnasio</h3>
+          <p>Te muestra qué toca hoy, cuánto va a durar y con qué peso arrancar en cada ejercicio.
+            Si tenés media hora, te recorta la rutina a lo esencial.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <span class="numero">PASO 03</span>
+          <h3>Marcás las series</h3>
+          <p>La app anota lo que hiciste, te cronometra el descanso y, cuando completás el rango
+            de repeticiones, la próxima vez te sube el peso sola.</p>
+        </div>
+      </div>
+
+      <div class="telefonos" style="margin-top:44px">
+        <div class="telefono aparece">
+          <img src="/capturas/app-sesion.png" alt="Entrenamiento en curso: cada ejercicio con su peso ajustable y las series que se van marcando." width="560" height="1204" loading="lazy">
+        </div>
+        <div class="telefono aparece">
+          <img src="/capturas/app-ejercicio.png" alt="Ficha de un ejercicio con la ilustración de las dos posiciones, cómo se hace y qué error evitar." width="560" height="1204" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- sin días fijos ---------------- -->
+  <section class="linea-arriba">
+    <div class="envoltura par">
+      <div>
+        <p class="eyebrow">Sin días fijos</p>
+        <h2 class="titular">La rutina se acomoda a tu semana, no al revés.</h2>
+        <p class="entradilla">Le decís cuántos días por semana podés entrenar y la app se encarga
+          de repartir el cuerpo. No hay "día de pierna" que se pierde si ese día trabajaste doble
+          turno: siempre sabe qué venías haciendo y qué te falta.</p>
+        <ul class="lista-tildes">
+          <li><b>Faltaste una semana.</b> Retoma donde quedaste, sin sermones.</li>
+          <li><b>Vas dos veces.</b> Cada sesión es de cuerpo completo, para no dejar nada afuera.</li>
+          <li><b>Vas cinco.</b> Se abre en empuje, tirón y pierna, como corresponde.</li>
+          <li><b>Te duele la rodilla.</b> Lo marcás y esos ejercicios no aparecen más.</li>
+        </ul>
+      </div>
+      <div class="telefono aparece">
+        <img src="/capturas/app-progreso.png" alt="Pantalla de progreso con la evolución del peso, la grasa corporal y los entrenamientos por semana." width="560" height="1204" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- evaluación corporal ---------------- -->
+  <section class="linea-arriba">
+    <div class="envoltura par invertido">
+      <div>
+        <p class="eyebrow">Evaluación corporal</p>
+        <h2 class="titular">Números que sirven, no solo el peso de la balanza.</h2>
+        <p class="entradilla">Con una cinta métrica y tres medidas, la app estima tu grasa corporal
+          por el método de la Marina de Estados Unidos, calcula cuántas calorías gastás por día y
+          cuántas te conviene comer según lo que buscás.</p>
+        <ul class="lista-tildes">
+          <li><b>Grasa corporal y masa magra</b>, sin balanza especial ni aparatos.</li>
+          <li><b>Calorías y macros</b> calculados para tu objetivo.</li>
+          <li><b>Relación cintura-altura</b>, el mejor aviso temprano sobre grasa abdominal.</li>
+          <li><b>La evolución</b> de cada medida, mes a mes, en un gráfico simple.</li>
+        </ul>
+      </div>
+      <div class="telefono aparece">
+        <img src="/capturas/app-cuerpo.png" alt="Evaluación corporal con peso, IMC, porcentaje de grasa, calorías diarias y reparto de proteínas, carbohidratos y grasas." width="560" height="1204" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- qué incluye ---------------- -->
+  <section class="linea-arriba">
+    <div class="envoltura">
+      <p class="eyebrow">Qué incluye</p>
+      <h2 class="titular">Todo lo que necesitás, en el teléfono que ya tenés.</h2>
+      <div class="rejilla tres">
+        <div class="tarjeta aparece">
+          <h3>Rutina que se arma sola</h3>
+          <p>Según tu nivel, tu objetivo, tu equipamiento y los días que puedas ir.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <h3>Guía de cada ejercicio</h3>
+          <p>Ilustración de las dos posiciones, cómo se hace y el error que casi todos cometen.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <h3>Progresión automática</h3>
+          <p>Cuando completás todas las series, la app te sube el peso sin que tengas que pensarlo.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <h3>Entrenador con IA</h3>
+          <p>Le preguntás lo que quieras. Conoce tu perfil, tus medidas y lo que venís entrenando.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <h3>Cronómetro de descanso</h3>
+          <p>Arranca solo cuando terminás una serie, con el tiempo que corresponde a tu objetivo.</p>
+        </div>
+        <div class="tarjeta aparece">
+          <h3>Funciona sin señal</h3>
+          <p>En el subsuelo del gimnasio también. Guarda en el teléfono y sincroniza cuando vuelve.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- instalar ---------------- -->
+  <section class="linea-arriba" id="instalar">
+    <div class="envoltura">
+      <p class="eyebrow">En tu celular</p>
+      <h2 class="titular">Instalala como cualquier app. Sin pasar por la tienda.</h2>
+      <p class="entradilla">Queda con su ícono en la pantalla de inicio, se abre a pantalla completa
+        y funciona aunque en el gimnasio no haya señal. No ocupa casi nada de espacio.</p>
+
+      <div class="acciones" style="margin-top:26px" id="instalar-acciones">
+        <button class="btn" type="button" id="btn-instalar" hidden>Instalar Nivora Fit</button>
+        <p class="aviso-instalada" id="ya-instalada" hidden>Ya la tenés instalada en este dispositivo.</p>
+      </div>
+
+      <div class="instalar-caja">
+        <div class="tarjeta sistema" id="pasos-android">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.6 9.5 19.3 6.6a.4.4 0 0 0-.7-.4L16.9 9.1A10.4 10.4 0 0 0 12 8a10.4 10.4 0 0 0-4.9 1.1L5.4 6.2a.4.4 0 0 0-.7.4l1.7 2.9A9.3 9.3 0 0 0 1.8 17h20.4a9.3 9.3 0 0 0-4.6-7.5zM7 14.3a1 1 0 1 1 0-2 1 1 0 0 1 0 2zm10 0a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>Android</h3>
+          <ol class="pasos">
+            <li>Abrí <b>nivorafit.com</b> en Chrome.</li>
+            <li>Tocá el botón <b>Instalar Nivora Fit</b> de acá arriba. Si no aparece, abrí el menú
+              <span class="ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></span>
+              y elegí <b>Instalar app</b>.</li>
+            <li>Confirmá. Ya la tenés en la pantalla de inicio.</li>
+          </ol>
+        </div>
+        <div class="tarjeta sistema" id="pasos-ios">
+          <h3><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16.4 12.6c0-2.3 1.9-3.4 2-3.5a4.3 4.3 0 0 0-3.4-1.8c-1.4-.2-2.8.8-3.5.8s-1.8-.8-3-.8A4.5 4.5 0 0 0 4.8 9.6c-1.6 2.8-.4 6.9 1.2 9.1.8 1.1 1.7 2.3 2.8 2.3s1.6-.7 3-.7 1.8.7 3 .7 2-1.1 2.8-2.2a9.7 9.7 0 0 0 1.3-2.6 4 4 0 0 1-2.5-3.6zM14.1 5.8A4 4 0 0 0 15 2.9a4.1 4.1 0 0 0-2.7 1.4 3.8 3.8 0 0 0-1 2.8 3.4 3.4 0 0 0 2.8-1.3z"/></svg>iPhone</h3>
+          <ol class="pasos">
+            <li>Abrí <b>nivorafit.com</b> en <b>Safari</b> (desde otro navegador no se puede).</li>
+            <li>Tocá <b>Compartir</b>
+              <span class="ico"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/></svg></span>
+              abajo en el centro.</li>
+            <li>Bajá y elegí <b>Agregar a inicio</b>. Listo.</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- precio ---------------- -->
+  <section class="linea-arriba" id="precio">
+    <div class="envoltura centrado">
+      <p class="eyebrow">Precio</p>
+      <h2 class="titular" style="margin:0 auto">Un plan, sin letra chica.</h2>
+      <div class="precio" style="text-align:left">
+        <span class="prueba">7 días gratis</span>
+        <div class="monto">$10.000 <span>por mes</span></div>
+        <p class="chico apagado" style="margin:14px 0 0">Probás una semana completa sin poner tarjeta.
+          Si te sirve, seguís; si no, no pasa nada.</p>
+        <ul class="lista-tildes">
+          <li>Rutinas ilimitadas, adaptadas a cada etapa</li>
+          <li>Evaluación corporal y seguimiento de medidas</li>
+          <li>Biblioteca completa de ejercicios con guía visual</li>
+          <li>Entrenador con IA que se acuerda de tu historial</li>
+          <li>Tus datos, descargables cuando quieras</li>
+        </ul>
+        <a class="btn bloque" href="/app/">Empezar mis 7 días gratis</a>
+        <p class="chico" style="color:var(--muted);margin:14px 0 0;text-align:center">
+          Débito automático con Mercado Pago. Cancelás desde la app, en dos toques.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- preguntas ---------------- -->
+  <section class="linea-arriba">
+    <div class="envoltura">
+      <p class="eyebrow">Preguntas</p>
+      <h2 class="titular">Lo que todos preguntan antes de empezar.</h2>
+      <div class="preguntas">
+        <details>
+          <summary>Nunca pisé un gimnasio. ¿Me sirve igual?</summary>
+          <p class="respuesta">Para eso está pensada. Si elegís nivel principiante, la app te propone
+            ejercicios simples, con máquinas antes que con barra, y cada uno viene con el dibujo de
+            cómo se hace y un enlace a videos. Las cargas arrancan livianas a propósito: es mejor
+            empezar corto y subir, que lastimarse la primera semana.</p>
+        </details>
+        <details>
+          <summary>Entreno en casa, no tengo gimnasio.</summary>
+          <p class="respuesta">Elegís si tenés gimnasio completo, un par de mancuernas o nada más que
+            tu cuerpo, y la app arma la rutina solo con lo que tengas a mano. Nunca te va a mandar a
+            una máquina que no existe en tu casa.</p>
+        </details>
+        <details>
+          <summary>¿Y si falto dos semanas?</summary>
+          <p class="respuesta">Retoma donde habías quedado y te avisa que estuviste parado, para que
+            arranques suave. La rotación no se guía por el calendario sino por lo último que
+            entrenaste, así que no hay nada que "se pierda".</p>
+        </details>
+        <details>
+          <summary>¿Funciona para mujeres?</summary>
+          <p class="respuesta">Sí. Las fórmulas de grasa corporal y de calorías son distintas según el
+            sexo biológico y la app usa las que corresponden. La rutina se arma igual para todos:
+            lo que cambia es tu nivel, tu objetivo y tus medidas.</p>
+        </details>
+        <details>
+          <summary>¿Necesito internet en el gimnasio?</summary>
+          <p class="respuesta">No. La app guarda todo en el teléfono y sincroniza con tu cuenta
+            cuando vuelve la conexión. Podés entrenar entero sin una raya de señal.</p>
+        </details>
+        <details>
+          <summary>¿Cómo cancelo?</summary>
+          <p class="respuesta">Desde la misma app, en Ajustes, o desde tu cuenta de Mercado Pago.
+            No hay que escribir a nadie ni esperar respuesta. Tus datos quedan guardados por si
+            volvés.</p>
+        </details>
+        <details>
+          <summary>¿Reemplaza a un profesor o a un nutricionista?</summary>
+          <p class="respuesta">No, y no queremos que lo haga. Nivora Fit te da una rutina general bien
+            armada y estimaciones calculadas con fórmulas estándar. Si tenés una lesión, una condición
+            de salud o buscás competir, un profesional que te vea en persona va a hacer cosas que
+            ninguna app puede.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- ---------------- cierre ---------------- -->
+  <section class="linea-arriba cierre">
+    <div class="envoltura">
+      <h2>El próximo entrenamiento ya está armado.</h2>
+      <p class="entradilla" style="margin:20px auto 0">Creás la cuenta, respondés seis preguntas y
+        tenés tu rutina. Siete días para probarla sin poner un peso.</p>
+      <div class="acciones">
+        <a class="btn" href="/app/">Empezar mis 7 días gratis</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="envoltura">
+    <div>
+      <img src="/marca/nivora-fit-blanco.png" alt="Nivora Fit" width="900" height="245">
+      <p>Nivora Fit te da rutinas generales y estimaciones calculadas con fórmulas estándar.
+        No reemplaza el consejo de un médico, un nutricionista ni un profesor de educación física.
+        Si tenés una condición de salud o algo te duele, consultá antes de entrenar.</p>
+      <p>Hecho en Argentina.</p>
+    </div>
+    <div class="enlaces">
+      <a href="/app/">Entrar a la app</a>
+      <a href="#como-funciona">Cómo funciona</a>
+      <a href="#instalar">Instalar</a>
+      <a href="#precio">Precio</a>
+    </div>
+  </div>
+  <div class="envoltura">
+    <div class="derechos">
+      <span>© 2026 Todos los derechos reservados · Metrics Lab Agency</span>
+    </div>
+  </div>
+</footer>
+
+<script src="/instalar.js"></script>
+<script>
+/* Tema: el botón pasa al opuesto de lo que se ve. */
+Tema.aplicar();
+document.getElementById("btn-tema").onclick = function () { Tema.alternar(); };
+
+/* Instalación: mostramos solo lo que sirve en este teléfono. */
+(function () {
+  var btn = document.getElementById("btn-instalar");
+  var ya = document.getElementById("ya-instalada");
+  var android = document.getElementById("pasos-android");
+  var ios = document.getElementById("pasos-ios");
+
+  Instalar.alCambiar(function (estado) {
+    btn.hidden = estado !== "boton";
+    ya.hidden = estado !== "instalada";
+    /* En un iPhone no tiene sentido mostrarle los pasos de Android, y al revés. */
+    if (Instalar.esIOS) { android.hidden = true; ios.hidden = false; }
+    else if (/android/i.test(navigator.userAgent)) { ios.hidden = true; android.hidden = false; }
+  });
+
+  btn.onclick = function () {
+    Instalar.pedir().then(function (r) {
+      if (r === "aceptada") { btn.hidden = true; ya.hidden = false; }
+    });
+  };
+})();
+
+/* La barra de arriba se despega con una línea cuando empezás a bajar. */
+var barra = document.getElementById("barra");
+addEventListener("scroll", function () {
+  barra.classList.toggle("pegada", scrollY > 10);
+}, { passive: true });
+
+/* Las tarjetas y las capturas aparecen al entrar en pantalla.
+   Si el navegador no lo soporta, se ven igual desde el principio. */
+if ("IntersectionObserver" in window) {
+  var ojo = new IntersectionObserver(function (entradas) {
+    entradas.forEach(function (e) {
+      if (e.isIntersecting) { e.target.classList.add("visible"); ojo.unobserve(e.target); }
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+  document.querySelectorAll(".aparece").forEach(function (el) { ojo.observe(el); });
+} else {
+  document.querySelectorAll(".aparece").forEach(function (el) { el.classList.add("visible"); });
+}
+</script>
+
 </body>
 </html>

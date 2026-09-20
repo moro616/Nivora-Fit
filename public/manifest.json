@@ -1,9 +1,11 @@
 {
+  "id": "/app/",
   "name": "Nivora Fit",
-  "short_name": "Nivora",
+  "short_name": "Nivora Fit",
   "description": "Tu entrenador personal: rutina adaptada a tu cuerpo, tu nivel y tus días, con evaluación corporal completa.",
   "lang": "es-AR",
-  "start_url": "/",
+  "dir": "ltr",
+  "start_url": "/app/",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -11,9 +13,17 @@
   "theme_color": "#0B0B0C",
   "categories": ["health", "fitness", "lifestyle"],
   "icons": [
-    { "src": "/icono.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
-    { "src": "/icono-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png" },
-    { "src": "/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icono.svg",          "sizes": "any",     "type": "image/svg+xml", "purpose": "any" },
+    { "src": "/icono-192.png",      "sizes": "192x192", "type": "image/png",     "purpose": "any" },
+    { "src": "/icono-512.png",      "sizes": "512x512", "type": "image/png",     "purpose": "any" },
+    { "src": "/icono-maskable.png", "sizes": "512x512", "type": "image/png",     "purpose": "maskable" }
+  ],
+  "screenshots": [
+    { "src": "/capturas/app-hoy.png",    "sizes": "560x1204", "type": "image/png", "form_factor": "narrow", "label": "La rutina de hoy" },
+    { "src": "/capturas/app-sesion.png", "sizes": "560x1204", "type": "image/png", "form_factor": "narrow", "label": "Entrenamiento en curso" },
+    { "src": "/capturas/app-cuerpo.png", "sizes": "560x1204", "type": "image/png", "form_factor": "narrow", "label": "Evaluación corporal" }
+  ],
+  "shortcuts": [
+    { "name": "Entrenar hoy", "short_name": "Hoy", "url": "/app/", "icons": [{ "src": "/icono-192.png", "sizes": "192x192" }] }
   ]
 }

@@ -110,8 +110,9 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .chip {
   font-size: 10.5px; color: var(--muted); border: 1px solid var(--linea);
   border-radius: 999px; padding: 4px 9px; white-space: nowrap;
-  max-width: 130px; overflow: hidden; text-overflow: ellipsis;
+  max-width: 118px; overflow: hidden; text-overflow: ellipsis;
 }
+@media (min-width: 390px) { .chip { max-width: 190px; } }
 
 /* ---------- tipografía suelta ---------- */
 .eyebrow {
@@ -460,3 +461,16 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- instalar en el teléfono ---------- */
+.linea-botones { display: flex; gap: 8px; }
+.linea-botones .btn { flex: 1; }
+.pasos-ios { margin: 4px 0 20px; padding-left: 20px; color: var(--ink-2); }
+.pasos-ios li { margin-bottom: 12px; }
+.pasos-ios b { color: var(--ink); }
+.ico-ios {
+  display: inline-grid; place-items: center; vertical-align: -4px;
+  width: 22px; height: 22px; border: 1px solid var(--linea-2); border-radius: 6px;
+}
+.ico-ios svg { width: 13px; height: 13px; fill: none; stroke: var(--ink); stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; }

@@ -14,10 +14,11 @@
 [functions]
   node_bundler = "esbuild"
 
-# La app es de una sola página: todo lo que no sea un archivo real va al index.
+# La app es de una sola página y vive en /app: todo lo que cuelgue de ahí
+# y no sea un archivo real va a su index. La landing, en la raíz, se sirve sola.
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from = "/app/*"
+  to = "/app/index.html"
   status = 200
 
 # Cabeceras de seguridad
@@ -33,3 +34,22 @@
   for = "/js/*"
   [headers.values]
     Cache-Control = "public, max-age=3600"
+
+# El service worker tiene que revisarse en cada visita: si queda cacheado,
+# los cambios tardan días en llegar a los teléfonos.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/fuentes/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

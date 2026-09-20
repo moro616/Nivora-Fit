@@ -33,11 +33,9 @@ function cerrarSheet() {
   document.body.style.overflow = "";
 }
 
-function aplicarTema() {
-  const t = (S.perfil && S.perfil.tema) || "auto";
-  document.documentElement.setAttribute("data-theme", t === "auto" ? "" : t);
-  if (t === "auto") document.documentElement.removeAttribute("data-theme");
-}
+/* El tema es una preferencia del teléfono, no de la cuenta: se guarda aparte
+   y lo comparten la landing y la app (ver instalar.js). */
+function aplicarTema() { Tema.aplicar(); }
 
 function iniciales(nombre) {
   if (!nombre) return "N";
@@ -284,9 +282,11 @@ function vistaHoy() {
     </div>
 
     <p class="eyebrow" style="margin:20px 2px 10px">La rutina de hoy</p>
-    <div class="exlist">${r.plan.map((it, i) => filaEjercicio(it, i)).join("")}</div>`;
+    <div class="exlist">${r.plan.map((it, i) => filaEjercicio(it, i)).join("")}</div>
+    ${tarjetaInstalar()}`;
 
   document.getElementById("empezar").onclick = empezarSesion;
+  conectarInstalar();
   document.getElementById("poco-tiempo").onclick = () => {
     abrirSheet(`<div class="sheet-head"><h3>¿Cuánto tiempo tenés?</h3>
       <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
@@ -863,7 +863,9 @@ function abrirAjustes() {
 
     <label class="lbl" style="margin-top:16px">Tema</label>
     <div class="ops" id="aj-tema">${[["auto", "Automático"], ["oscuro", "Oscuro"], ["claro", "Claro"]].map(([id, n]) =>
-      `<button type="button" class="op${(p.tema || "auto") === id ? " activo" : ""}" data-v="${id}"><b>${esc(n)}</b></button>`).join("")}</div>
+      `<button type="button" class="op${Tema.leer() === id ? " activo" : ""}" data-v="${id}"><b>${esc(n)}</b></button>`).join("")}</div>
+
+    ${bloqueInstalarAjustes()}
 
     <button class="btn block" id="aj-guardar" style="margin-top:20px">Guardar cambios</button>
     <button class="btn ghost block" id="aj-exportar" style="margin-top:8px">Descargar mis datos</button>
@@ -895,6 +897,7 @@ function abrirAjustes() {
     p.altura = num(document.getElementById("aj-altura").value, p.altura);
     p.dias = Math.min(6, Math.max(2, Math.round(num(document.getElementById("aj-dias").value, p.dias))));
     Object.assign(p, elegidos);
+    if (elegidos.tema) Tema.fijar(elegidos.tema);
     p.limitaciones = [...lims];
     const despues = JSON.stringify([p.objetivo, p.nivel, p.equipo, p.dias, [...lims]]);
     if (antes !== despues && !S.activa) S.agenda = null; /* que se rearme con lo nuevo */
@@ -904,6 +907,9 @@ function abrirAjustes() {
     pintar();
     toast("Listo, guardado.");
   };
+
+  const bi = document.getElementById("aj-instalar");
+  if (bi) bi.onclick = () => { cerrarSheet(); pedirInstalacion(); };
 
   document.getElementById("aj-exportar").onclick = () => {
     const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: "application/json" });
@@ -929,4 +935,96 @@ function abrirAjustes() {
     lsBorrar(); guardar("Datos borrados");
     cerrarSheet(); pintar();
   };
+}
+
+/* ============================================================
+   INSTALAR EN EL TELÉFONO
+   ============================================================ */
+const CLAVE_INSTALAR_OCULTO = "nivora.instalar.oculto";
+
+function instalarOculto() {
+  try { return localStorage.getItem(CLAVE_INSTALAR_OCULTO) === "1"; } catch (e) { return false; }
+}
+
+/* La tarjeta del final de Hoy: aparece solo si se puede instalar y la
+   persona no dijo "ahora no". */
+function tarjetaInstalar() {
+  const e = Instalar.estado();
+  const vale = (e === "boton" || e === "ios") && !instalarOculto();
+  return `<div class="card pad instalar-card" id="caja-instalar" ${vale ? "" : "hidden"} style="margin-top:18px">
+    <p class="eyebrow">Tenela a mano</p>
+    <p class="cuerpo" style="margin:8px 0 14px">Instalá Nivora Fit en tu pantalla de inicio: abre al toque,
+    a pantalla completa, y funciona aunque en el gimnasio no haya señal.</p>
+    <div class="linea-botones">
+      <button class="btn" id="hoy-instalar">Instalar</button>
+      <button class="btn ghost" id="hoy-instalar-no">Ahora no</button>
+    </div>
+  </div>`;
+}
+
+function conectarInstalar() {
+  const si = document.getElementById("hoy-instalar");
+  const no = document.getElementById("hoy-instalar-no");
+  if (si) si.onclick = pedirInstalacion;
+  if (no) no.onclick = () => {
+    try { localStorage.setItem(CLAVE_INSTALAR_OCULTO, "1"); } catch (e) {}
+    const c = document.getElementById("caja-instalar");
+    if (c) c.hidden = true;
+    toast("Cuando quieras, está en tu cuenta → Instalar.");
+  };
+}
+
+/* Si el navegador avisa tarde que se puede instalar, actualizamos la tarjeta. */
+function refrescarInstalar() {
+  const c = document.getElementById("caja-instalar");
+  if (!c) return;
+  c.outerHTML = tarjetaInstalar();
+  conectarInstalar();
+}
+
+function bloqueInstalarAjustes() {
+  const e = Instalar.estado();
+  if (e === "instalada")
+    return `<p class="sm muted" style="margin:18px 0 0">● Nivora Fit ya está instalada en este teléfono.</p>`;
+  if (e === "boton" || e === "ios" || e === "ios-otro-navegador")
+    return `<button class="btn ghost block" id="aj-instalar" style="margin-top:18px">Instalar en el teléfono</button>`;
+  return "";
+}
+
+function pedirInstalacion() {
+  Instalar.pedir().then(r => {
+    if (r === "aceptada") {
+      toast("Listo, ya la tenés en la pantalla de inicio.");
+      const c = document.getElementById("caja-instalar");
+      if (c) c.hidden = true;
+    } else if (r === "ios") {
+      pasosIOS();
+    } else if (r === "ios-otro-navegador") {
+      abrirSheet(`<div class="sheet-head"><h3>Abrila en Safari</h3>
+        <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
+        <p class="cuerpo">En iPhone, solo Safari puede agregar apps a la pantalla de inicio.
+        Copiá la dirección, abrila en Safari y seguí los pasos de ahí.</p>
+        <button class="btn block" id="copiar-url">Copiar dirección</button>`);
+      document.getElementById("copiar-url").onclick = () => {
+        (navigator.clipboard ? navigator.clipboard.writeText(location.origin + "/app/") : Promise.reject())
+          .then(() => toast("Dirección copiada."), () => toast(location.origin + "/app/"));
+      };
+    } else if (r === "manual") {
+      toast("Buscá \"Instalar\" o \"Agregar a inicio\" en el menú del navegador.");
+    }
+  });
+}
+
+function pasosIOS() {
+  abrirSheet(`<div class="sheet-head"><h3>Instalar en iPhone</h3>
+    <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
+    <ol class="pasos-ios">
+      <li>Tocá <b>Compartir</b>
+        <span class="ico-ios"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M5 12v8h14v-8"/></svg></span>
+        en la barra de Safari, abajo en el centro.</li>
+      <li>Bajá en la lista y elegí <b>Agregar a inicio</b>.</li>
+      <li>Tocá <b>Agregar</b> arriba a la derecha. Listo.</li>
+    </ol>
+    <button class="btn block" id="ios-ok">Entendido</button>`);
+  document.getElementById("ios-ok").onclick = cerrarSheet;
 }

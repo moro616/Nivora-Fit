@@ -7,7 +7,7 @@
 
 /* Si todavía no cargaste las claves de Supabase, la app igual funciona:
    guarda todo en el teléfono y no pide cuenta. Sirve para probarla. */
-const HAY_NUBE = !!(window.CONFIG && CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY);
+const HAY_NUBE = !!(window.CONFIG && CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase);
 const SB = HAY_NUBE ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 }) : null;
@@ -56,7 +56,7 @@ async function iniciarApp() {
   pintar();
   estadoGuardado(Cuenta.acceso.motivo === "prueba"
     ? `Prueba gratis · te quedan ${Cuenta.acceso.diasRestantes} día${Cuenta.acceso.diasRestantes === 1 ? "" : "s"}`
-    : "Sincronizado con tu cuenta");
+    : "Sincronizado");
   if (!remoto || !remoto.updated) await subirEstado();
 }
 
@@ -84,10 +84,10 @@ async function subirEstado() {
       .update({ datos: snapshot(), actualizado: new Date().toISOString() })
       .eq("id", Cuenta.usuario.id);
     if (error) throw error;
-    estadoGuardado("Guardado en tu cuenta");
+    estadoGuardado("Guardado");
     await sincronizarTablas();
   } catch (e) {
-    estadoGuardado("Guardado en este dispositivo; se sube cuando vuelva la conexión");
+    estadoGuardado("Guardado · se sube al volver");
   } finally {
     Cuenta.sincronizando = false;
   }
