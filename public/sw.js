@@ -11,7 +11,7 @@
    Al publicar cambios grandes, subí VERSION: se borra lo viejo.
    ============================================================ */
 
-const VERSION = "nivora-v9";
+const VERSION = "nivora-v13";
 const PACIENCIA = 3500;
 
 /* Lo mínimo para que la app arranque sin conexión. */
@@ -39,6 +39,10 @@ const BASE = [
   "/js/cuenta.js",
   "/js/informe.js",
   "/js/clima.js",
+  "/js/logros.js",
+  "/js/fotos.js",
+  "/js/recordatorios.js",
+  "/js/admin.js",
   "/js/entrenador.js",
   "/js/nube.js",
   "/js/arranque.js",
@@ -143,3 +147,28 @@ async function buscarGuardado(cache, pedido, url) {
   }
   return undefined;
 }
+
+
+/* ---------- recordatorios ---------- */
+self.addEventListener("push", evento => {
+  let d = {};
+  try { d = evento.data ? evento.data.json() : {}; } catch (e) { d = { cuerpo: evento.data && evento.data.text() }; }
+  evento.waitUntil(self.registration.showNotification(d.titulo || "Nivora Fit", {
+    body: d.cuerpo || "",
+    icon: "/icono-192.png",
+    badge: "/icono-192.png",
+    tag: d.tag || "nivora",
+    data: { url: d.url || "/app/" }
+  }));
+});
+
+self.addEventListener("notificationclick", evento => {
+  evento.notification.close();
+  const destino = (evento.notification.data && evento.notification.data.url) || "/app/";
+  evento.waitUntil((async () => {
+    const ventanas = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+    const abierta = ventanas.find(v => new URL(v.url).pathname.startsWith("/app"));
+    if (abierta) { await abierta.focus(); return; }
+    await self.clients.openWindow(destino);
+  })());
+});

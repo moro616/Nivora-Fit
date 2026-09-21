@@ -11,7 +11,8 @@ const cfg = {
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "",
   PRECIO_MENSUAL: Number(process.env.PRECIO_MENSUAL || 10000),
   MONEDA: process.env.MONEDA || "ARS",
-  DIAS_PRUEBA: Number(process.env.DIAS_PRUEBA || 7)
+  DIAS_PRUEBA: Number(process.env.DIAS_PRUEBA || 7),
+  VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || ""
 };
 
 if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {

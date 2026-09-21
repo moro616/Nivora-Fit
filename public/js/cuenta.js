@@ -6,7 +6,8 @@
    ============================================================ */
 
 const VERSION_APP = "1.0";
-const CONTACTO = "moro_511@live.com.ar";
+const CONTACTO = "moro_511@live.com.ar";          /* solo para trámites legales (arrepentimiento, datos) */
+const INSTAGRAM = "https://www.instagram.com/metricslab.agency/";
 
 /* El pie que aparece al final del menú y de cada pantalla. */
 function pieLegal() {
@@ -16,7 +17,7 @@ function pieLegal() {
     <p><a href="/terminos/" target="_blank" rel="noopener">Términos</a> ·
       <a href="/privacidad/" target="_blank" rel="noopener">Privacidad</a> ·
       <a href="/arrepentimiento/" target="_blank" rel="noopener">Botón de arrepentimiento</a> ·
-      <a href="mailto:${CONTACTO}">Contacto</a></p>
+      <a href="${INSTAGRAM}" target="_blank" rel="noopener">Contacto</a></p>
   </footer>`;
 }
 
@@ -48,6 +49,8 @@ const ICO = {
   pago: `<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>`,
   tema: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>`,
   bajar: `<svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/></svg>`,
+  campana: `<svg viewBox="0 0 24 24"><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg>`,
+  admin: `<svg viewBox="0 0 24 24"><path d="M4 19V11M10 19V5M16 19v-8M22 19H2"/></svg>`,
   ayuda: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.3-.9.8-.9 1.4v.6M12 16.8h.01"/></svg>`,
   salir: `<svg viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg>`,
   pdf: `<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>`,
@@ -82,6 +85,8 @@ function abrirAjustes() {
       ${filaMenu("cu-perfil", "Datos personales", "Nombre, contacto, fecha de nacimiento, altura", ICO.perfil)}
       ${filaMenu("cu-entreno", "Mi entrenamiento", `${(OBJETIVOS[p.objetivo] || {}).nombre} · ${p.dias || 3} días · ${(NIVELES[p.nivel] || {}).nombre}`, ICO.entreno)}
       ${conCuenta ? filaMenu("cu-pagos", "Suscripción y pagos", "Estado, comprobantes y baja", ICO.pago) : ""}
+      ${conCuenta ? filaMenu("cu-recordar", "Recordatorios", textoRecordatorios(), ICO.campana) : ""}
+      ${conCuenta && Cuenta.acceso && Cuenta.acceso.motivo === "admin" ? filaMenu("cu-admin", "Panel de administrador", "Usuarios, suscripciones e ingresos", ICO.admin) : ""}
     </div>
 
     <label class="lbl" style="margin-top:18px">Apariencia</label>
@@ -92,7 +97,7 @@ function abrirAjustes() {
       ${inst === "boton" || inst === "ios" || inst === "ios-otro-navegador" ? filaMenu("aj-instalar", "Instalar en el teléfono", "Abre al toque y anda sin señal", ICO.cel) : ""}
       ${filaMenu("cu-informe", "Descargar mi informe", "PDF con tu evaluación, actividad y marcas", ICO.pdf)}
       ${filaMenu("cu-exportar", "Copia de seguridad", "Archivo técnico con todos tus datos", ICO.bajar)}
-      ${filaMenu("cu-ayuda", "Ayuda y contacto", "Escribinos por cualquier duda o problema", ICO.ayuda)}
+      ${filaMenu("cu-ayuda", "Ayuda y contacto", "Escribinos por Instagram: @metricslab.agency", ICO.ayuda)}
     </div>
 
     ${conCuenta ? `<div class="menu" style="margin-top:18px">
@@ -106,13 +111,14 @@ function abrirAjustes() {
     ${pieLegal()}`);
 
   document.getElementById("cu-volver").onclick = () => cerrarSheet();
-  document.getElementById("cu-ayuda").onclick = () => {
-    location.href = "mailto:" + CONTACTO + "?subject=" + encodeURIComponent("Ayuda con Nivora Fit") +
-      "&body=" + encodeURIComponent("\n\n—\nCuenta: " + ((Cuenta.usuario && Cuenta.usuario.email) || "sin cuenta") + "\nVersión: " + VERSION_APP);
-  };
+  document.getElementById("cu-ayuda").onclick = () => window.open(INSTAGRAM, "_blank", "noopener");
   document.getElementById("cu-foto").onclick = elegirFoto;
   document.getElementById("cu-perfil").onclick = hojaDatos;
   document.getElementById("cu-entreno").onclick = hojaEntreno;
+  const rc = document.getElementById("cu-recordar");
+  if (rc) rc.onclick = hojaRecordatorios;
+  const ad = document.getElementById("cu-admin");
+  if (ad) ad.onclick = abrirPanelAdmin;
   const pg = document.getElementById("cu-pagos");
   if (pg) pg.onclick = hojaPagos;
   document.querySelectorAll("#cu-tema button").forEach(b => b.onclick = () => {
@@ -282,7 +288,7 @@ function hojaEntreno() {
 
 /* ---------- suscripción y pagos ---------- */
 const ESTADO_PAGO = {
-  approved: ["Aprobado", "bien"], authorized: ["Autorizada", "bien"], accredited: ["Acreditado", "bien"],
+  approved: ["Aprobado", "bien"], processed: ["Cobrado", "bien"], authorized: ["Autorizada", "bien"], accredited: ["Acreditado", "bien"],
   pending: ["Pendiente", "aviso"], in_process: ["En proceso", "aviso"], paused: ["Pausada", "aviso"],
   rejected: ["Rechazado", "bad"], cancelled: ["Cancelado", ""], refunded: ["Devuelto", ""], charged_back: ["Contracargo", "bad"]
 };

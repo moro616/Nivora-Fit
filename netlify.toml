@@ -14,6 +14,10 @@
 [functions]
   node_bundler = "esbuild"
 
+# Recordatorios: corre cada hora y le escribe a quien eligió esa hora.
+[functions."recordatorios"]
+  schedule = "@hourly"
+
 # La app es de una sola página y vive en /app: todo lo que cuelgue de ahí
 # y no sea un archivo real va a su index. La landing, en la raíz, se sirve sola.
 [[redirects]]

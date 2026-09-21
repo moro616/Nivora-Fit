@@ -97,6 +97,7 @@ function pintar() {
   if (pie && !pie.innerHTML && typeof pieLegal === "function") pie.innerHTML = pieLegal();
 
   if (!S.perfil) return vistaSetup();
+  if (typeof revisarLogros === "function") setTimeout(revisarLogros, 400);
   if (activa === "hoy") return vistaHoy();
   if (activa === "agenda") return vistaAgenda();
   if (activa === "ejercicios") return vistaEjercicios();
@@ -286,6 +287,7 @@ function vistaHoy() {
     : `Último entrenamiento ${diaRelativo(S.sesiones[S.sesiones.length - 1].fecha)}.`;
 
   v.innerHTML = `
+    ${avisoPrueba()}
     ${tarjetaClima()}
     <div class="hero">
       <p class="eyebrow">Hoy te toca</p>
@@ -319,6 +321,7 @@ function vistaHoy() {
   document.getElementById("empezar").onclick = empezarSesion;
   conectarTarjetaCardio();
   conectarClima();
+  conectarAvisoPrueba();
   conectarInstalar();
   document.getElementById("poco-tiempo").onclick = () => {
     abrirSheet(`<div class="sheet-head"><h3>¿Cuánto tiempo tenés?</h3>
@@ -859,6 +862,8 @@ function vistaCuerpo() {
         ${prog.cintura != null ? `<div><b class="${prog.cintura <= 0 ? "t-bien" : ""}">${prog.cintura > 0 ? "+" : ""}${redondear(prog.cintura, 1)}</b><span>cm cintura</span></div>` : ""}
       </div></div>` : ""}
 
+    ${tarjetaFotos()}
+
     <p class="eyebrow" style="margin:22px 2px 10px">Historial de medidas</p>
     ${S.medidas.length ? `<div class="exlist">${S.medidas.slice().reverse().slice(0, 12).map(x => {
       const e2 = evaluar(S.perfil, x);
@@ -870,6 +875,7 @@ function vistaCuerpo() {
     }).join("")}</div>` : `<p class="vacio">Cargá tus medidas para ver cómo evolucionan.</p>`}`;
 
   document.getElementById("cargar-medidas").onclick = sheetMedidas;
+  conectarFotos();
 }
 
 function sheetMedidas() {

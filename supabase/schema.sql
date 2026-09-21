@@ -274,3 +274,45 @@ alter table public.n8n_chat_histories enable row level security;
 revoke all on public.n8n_chat_histories from anon, authenticated;
 revoke all on public.perfiles_respaldo from anon;
 grant all on public.n8n_chat_histories, public.perfiles_respaldo to service_role;
+
+-- ============================================================
+-- v11: RECORDATORIOS Y FOTOS DE PROGRESO
+-- ============================================================
+
+-- Suscripciones a notificaciones: una por teléfono. Solo el servidor la toca.
+create table if not exists public.push_suscripciones (
+  id            bigint generated always as identity primary key,
+  usuario_id    uuid not null references auth.users(id) on delete cascade,
+  endpoint      text not null unique,
+  p256dh        text not null,
+  auth          text not null,
+  hora          smallint not null default 18 check (hora between 0 and 23),
+  zona          text not null default 'America/Argentina/Buenos_Aires',
+  activo        boolean not null default true,
+  toca_hoy      boolean not null default true,
+  faltas        boolean not null default true,
+  ultimo_envio  timestamptz,
+  creado        timestamptz not null default now()
+);
+create index if not exists push_usuario_idx on public.push_suscripciones (usuario_id);
+alter table public.push_suscripciones enable row level security;
+revoke all on public.push_suscripciones from anon, authenticated;
+grant all on public.push_suscripciones to service_role;
+grant usage, select on all sequences in schema public to service_role;
+
+-- Fotos de progreso: espacio privado, 6 MB por foto, solo imágenes.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('progreso', 'progreso', false, 6291456, array['image/jpeg','image/png','image/webp'])
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+-- Cada persona solo ve, sube y borra lo que está en su propia carpeta (su id).
+drop policy if exists "progreso: ver lo propio"    on storage.objects;
+drop policy if exists "progreso: subir lo propio"  on storage.objects;
+drop policy if exists "progreso: borrar lo propio" on storage.objects;
+create policy "progreso: ver lo propio" on storage.objects for select to authenticated
+  using (bucket_id = 'progreso' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "progreso: subir lo propio" on storage.objects for insert to authenticated
+  with check (bucket_id = 'progreso' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "progreso: borrar lo propio" on storage.objects for delete to authenticated
+  using (bucket_id = 'progreso' and (storage.foldername(name))[1] = auth.uid()::text);

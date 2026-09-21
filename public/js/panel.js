@@ -78,6 +78,8 @@ function vistaProgreso() {
       </div>
     </div>
 
+    ${bloqueLogros()}
+
     <section class="card pad panel-bloque">
       <div class="graf-head"><h3 class="graf-tit">Constancia</h3><span class="delta">últimas 16 semanas</span></div>
       ${mapaCalor(16)}

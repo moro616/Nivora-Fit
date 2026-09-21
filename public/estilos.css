@@ -760,3 +760,80 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .pie-app b { color: var(--ink-2); font-weight: 600; }
 .pie-app a { color: var(--muted); }
 #pie { padding: 0 0 8px; }
+
+/* ============================================================
+   v11 — aviso de prueba, logros, fotos, recordatorios, admin
+   ============================================================ */
+.aviso-prueba { display: flex; flex-direction: column; gap: 12px; margin: 0 0 12px; padding: 16px;
+  border-radius: var(--r); background: var(--ink); color: var(--bg); }
+.aviso-prueba b { font-size: 16px; }
+.aviso-prueba p { margin: 4px 0 0; font-size: 13px; opacity: .8; line-height: 1.45; }
+.aviso-botones { display: flex; align-items: center; gap: 14px; }
+.aviso-prueba .btn { background: var(--bg); color: var(--ink); border-color: var(--bg); flex: 1; }
+.aviso-prueba .linkbtn { color: var(--bg); opacity: .75; }
+
+.logros { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 14px; }
+.logro { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; padding: 12px 6px 10px;
+  border-radius: 14px; background: var(--card-2); color: var(--muted); }
+.logro b { font-size: 12px; line-height: 1.2; color: var(--ink-2); font-weight: 600; }
+.logro small { font-size: 10.5px; line-height: 1.25; }
+.logro-medalla { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px dashed var(--linea-2); color: var(--muted); }
+.logro-medalla svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.logro.ok { background: var(--card-2); color: var(--ink-2); }
+.logro.ok b { color: var(--ink); }
+.logro.ok .logro-medalla { border: 0; background: var(--ink); color: var(--bg); }
+.logro-barra { display: block; width: 70%; height: 3px; border-radius: 2px; background: var(--linea); margin-top: 3px; overflow: hidden; }
+.logro-barra i { display: block; height: 100%; background: var(--muted); }
+.logro-aviso { position: fixed; left: 50%; top: calc(14px + env(safe-area-inset-top)); z-index: 80;
+  transform: translate(-50%, -140%); transition: transform .35s cubic-bezier(.2,.9,.3,1.2);
+  display: flex; align-items: center; gap: 12px; padding: 10px 18px 10px 10px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); box-shadow: 0 10px 30px rgba(0,0,0,.35); cursor: pointer; max-width: calc(100% - 28px); }
+.logro-aviso.visible { transform: translate(-50%, 0); }
+.logro-aviso .logro-medalla { background: var(--bg); color: var(--ink); border: 0; flex: 0 0 40px; }
+.logro-aviso small { display: block; font-size: 10.5px; opacity: .7; letter-spacing: .04em; text-transform: uppercase; }
+.logro-aviso b { display: block; font-size: 15px; }
+.logro-aviso i { font-style: normal; font-size: 11.5px; opacity: .7; }
+@media (prefers-reduced-motion: reduce) { .logro-aviso { transition: none; } }
+
+.fotos-grilla { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.foto-mini { position: relative; padding: 0; border: 0; border-radius: 10px; overflow: hidden; aspect-ratio: 3 / 4;
+  background: var(--card-2); cursor: pointer; }
+.foto-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.foto-mini span { position: absolute; left: 0; right: 0; bottom: 0; padding: 14px 6px 5px; font-size: 10.5px; color: #fff;
+  background: linear-gradient(transparent, rgba(0,0,0,.7)); text-align: left; }
+.fotos-grilla .vacio { grid-column: 1 / -1; }
+.foto-grande-img { width: 100%; max-height: 62vh; object-fit: contain; border-radius: 14px; background: var(--card-2); display: block; }
+.comparador { position: relative; margin-top: 6px; border-radius: 14px; overflow: hidden; aspect-ratio: 3 / 4; background: var(--card-2);
+  touch-action: none; user-select: none; cursor: ew-resize; }
+.comparador img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.cmp-antes { position: absolute; inset: 0; }
+.cmp-linea { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #fff; box-shadow: 0 0 6px rgba(0,0,0,.5); }
+.cmp-linea span { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+  background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+.cmp-et { position: absolute; top: 10px; font-size: 11px; font-weight: 600; color: #fff; background: rgba(0,0,0,.55); padding: 3px 9px; border-radius: 999px; }
+.cmp-et.izq { left: 10px; } .cmp-et.der { right: 10px; }
+.cmp-rango { width: 100%; margin: 12px 0 0; accent-color: var(--ink); }
+
+.interruptor { display: flex; align-items: flex-start; gap: 12px; padding: 14px; border-radius: var(--r-s);
+  background: var(--card-2); cursor: pointer; }
+.interruptor + .interruptor { margin-top: 8px; }
+.interruptor input { appearance: none; flex: 0 0 42px; width: 42px; height: 24px; margin: 0; border-radius: 999px;
+  background: var(--linea-2); position: relative; cursor: pointer; transition: background .2s; }
+.interruptor input::after { content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: var(--bg); transition: transform .2s; }
+.interruptor input:checked { background: var(--ink); }
+.interruptor input:checked::after { transform: translateX(18px); }
+.interruptor b { display: block; font-size: 14px; color: var(--ink); }
+.interruptor small { display: block; font-size: 12px; color: var(--muted); margin-top: 2px; }
+.interruptor.chico { padding: 12px; }
+
+.adm-kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.adm-kpi { padding: 14px; border-radius: var(--r-s); background: var(--card-2); }
+.adm-kpi.grande { grid-column: 1 / -1; background: var(--ink); color: var(--bg); }
+.adm-kpi span { display: block; font-size: 11.5px; color: var(--muted); }
+.adm-kpi.grande span, .adm-kpi.grande small { color: var(--bg); opacity: .7; }
+.adm-kpi b { display: block; font-family: var(--f-num); font-size: 24px; font-weight: 600; margin: 4px 0 2px; }
+.adm-kpi.grande b { font-size: 34px; }
+.adm-kpi small { font-size: 11.5px; color: var(--muted); }
+.adm-estado { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
