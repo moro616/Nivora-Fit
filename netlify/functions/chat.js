@@ -25,12 +25,14 @@ exports.handler = async (event) => {
 
   // --- ¿tiene acceso? ---
   const { data: perfil } = await admin
-    .from("perfiles").select("datos, trial_fin, suscripcion_estado")
+    .from("perfiles").select("datos, trial_fin, suscripcion_estado, proximo_cobro, es_admin")
     .eq("id", usuario.id).maybeSingle();
   if (!perfil) return json(403, { error: "sin perfil" });
 
-  const conAcceso = perfil.suscripcion_estado === "activa" ||
-    (perfil.trial_fin && new Date(perfil.trial_fin) > new Date());
+  const ahora = new Date();
+  const conAcceso = perfil.es_admin || perfil.suscripcion_estado === "activa" ||
+    (perfil.trial_fin && new Date(perfil.trial_fin) > ahora) ||
+    (perfil.suscripcion_estado === "cancelada" && perfil.proximo_cobro && new Date(perfil.proximo_cobro) > ahora);
   if (!conAcceso) return json(402, { error: "suscripción requerida" });
 
   // --- tope diario, para que un usuario no se coma el presupuesto ---
@@ -78,41 +80,101 @@ exports.handler = async (event) => {
 
 /* Resumen del usuario en texto plano: es lo que el agente lee antes de
    responder. Corto a propósito — cuanto más ruido, peores las respuestas. */
+/* Las claves tienen que coincidir con las de la app (cuerpo.js y ejercicios.js). */
+const OBJETIVOS = {
+  bajar:      { nombre: "bajar de peso", ajuste: -0.20, reps: "12 a 15" },
+  recomponer: { nombre: "bajar grasa y tonificar", ajuste: -0.10, reps: "10 a 12" },
+  musculo:    { nombre: "ganar músculo", ajuste: 0.10, reps: "8 a 12" },
+  salud:      { nombre: "salud y estado físico general", ajuste: 0, reps: "10 a 12" }
+};
+const NIVELES = { principiante: "principiante", intermedio: "intermedio", avanzado: "avanzado" };
+const EQUIPOS = { gimnasio: "gimnasio completo", mancuernas: "mancuernas en casa", casa: "solo peso corporal, en casa" };
+const ACTIVIDAD = { sedentario: 1.2, ligero: 1.375, moderado: 1.55, alto: 1.725 };
+const ACTIVIDAD_TXT = { sedentario: "trabajo sentado", ligero: "algo de movimiento en el día", moderado: "trabajo de pie o bastante caminata", alto: "trabajo físico pesado" };
+const LIMITACIONES = { rodilla: "rodillas", hombro: "hombros", espalda: "espalda baja", muneca: "muñecas" };
+
+const legible = id => String(id || "").replace(/-/g, " ");
+
+function edadDe(p) {
+  if (p.edad) return p.edad;
+  if (!p.nacimiento) return null;
+  const n = new Date(p.nacimiento), h = new Date();
+  let e = h.getFullYear() - n.getFullYear();
+  if (h < new Date(h.getFullYear(), n.getMonth(), n.getDate())) e--;
+  return e;
+}
+
 async function armarContexto(usuarioId, perfil) {
   const d = perfil.datos || {};
   const p = d.perfil || {};
-  const medidas = (d.medidas || []).slice(-3);
-  const ultima = medidas[medidas.length - 1] || {};
-  const primera = (d.medidas || [])[0] || {};
+  const med = d.medidas || [];
+  const ultima = med[med.length - 1] || {};
+  const primera = med[0] || {};
+  const ses = (d.sesiones || []).slice().sort((a, b) => a.fecha.localeCompare(b.fecha));
+  const hoy = new Date().toISOString().slice(0, 10);
 
-  const { data: sesiones } = await admin.from("sesiones")
-    .select("fecha, bloque, series, minutos, kcal")
-    .eq("usuario_id", usuarioId).order("fecha", { ascending: false }).limit(8);
+  const edad = edadDe(p);
+  const peso = ultima.peso || p.peso;
+  const altura = p.altura;
+  const obj = OBJETIVOS[p.objetivo] || OBJETIVOS.salud;
+  const imc = peso && altura ? peso / Math.pow(altura / 100, 2) : null;
+
+  /* Calorías: la misma cuenta que la app (Mifflin-St Jeor + actividad + entrenamiento + objetivo). */
+  let kcal = null, proteina = null;
+  if (peso && altura && edad) {
+    const tmb = 10 * peso + 6.25 * altura - 5 * edad + (p.sexo === "mujer" ? -161 : 5);
+    const gasto = tmb * (ACTIVIDAD[p.actividad] || 1.375) + (p.dias || 3) * 300 / 7;
+    kcal = Math.round(gasto * (1 + obj.ajuste) / 10) * 10;
+    proteina = Math.round(peso * (p.objetivo === "musculo" ? 1.8 : p.objetivo === "salud" ? 1.6 : 2));
+  }
+
+  const dias = f => Math.round((new Date(hoy) - new Date(f)) / 86400000);
+  const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  const hace7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const ult30 = ses.filter(s => s.fecha >= hace30);
+  const gym30 = ult30.filter(s => s.km == null);
+  const cardio30 = ult30.filter(s => s.km != null);
+  const grupos = {};
+  gym30.forEach(s => Object.entries(s.grupos || {}).forEach(([g, n]) => { grupos[g] = (grupos[g] || 0) + n; }));
+  const ultimaSesion = ses[ses.length - 1];
 
   const cargas = Object.entries(d.cargas || {})
-    .slice(0, 12).map(([k, v]) => `${k}: ${v.kg} kg`).join(", ");
+    .filter(([, v]) => v && v.kg > 0)
+    .sort((a, b) => b[1].kg - a[1].kg).slice(0, 10)
+    .map(([k, v]) => `${legible(k)} ${v.kg} kg`).join(", ");
 
-  const objetivos = { bajar: "bajar grasa", musculo: "ganar músculo",
-    tonificar: "tonificar", gluteos: "glúteos y piernas", salud: "salud general" };
-  const niveles = { 1: "principiante", 2: "intermedio", 3: "con experiencia" };
-  const equipos = { gym: "gimnasio completo", libre: "pesas libres", casa: "en casa" };
+  const ficha = [
+    `Nombre: ${p.nombre || "sin nombre"}`,
+    `${p.sexo === "mujer" ? "Mujer" : "Hombre"}${edad ? `, ${edad} años` : ""}${altura ? `, ${altura} cm` : ""}`,
+    peso ? `Peso actual: ${peso} kg` + (primera.peso && primera.fecha !== ultima.fecha
+      ? ` (empezó en ${primera.peso} kg el ${primera.fecha}; cambio ${(peso - primera.peso >= 0 ? "+" : "") + (peso - primera.peso).toFixed(1)} kg)` : "") : null,
+    imc ? `IMC: ${imc.toFixed(1)}` : null,
+    ultima.cintura ? `Cintura: ${ultima.cintura} cm` + (primera.cintura && primera.cintura !== ultima.cintura ? ` (empezó en ${primera.cintura} cm)` : "") : null,
+    `Objetivo: ${obj.nombre}. Rango de repeticiones de su plan: ${obj.reps}.`,
+    `Nivel: ${NIVELES[p.nivel] || p.nivel || "sin dato"}. Entrena en: ${EQUIPOS[p.equipo] || p.equipo || "sin dato"}. Meta: ${p.dias || 3} días por semana.`,
+    `Fuera del gimnasio: ${ACTIVIDAD_TXT[p.actividad] || "sin dato"}.`,
+    (p.limitaciones || []).length ? `Molestias declaradas: ${p.limitaciones.map(l => LIMITACIONES[l] || l).join(", ")}. Evitar cargar esas zonas.` : "Sin molestias declaradas.",
+    kcal ? `Calorías diarias sugeridas por la app: ~${kcal} kcal, proteína ~${proteina} g (estimaciones).` : null,
+    `Entrenamientos registrados en total: ${ses.length}. En los últimos 7 días: ${ses.filter(s => s.fecha >= hace7).length}.`,
+    ultimaSesion ? `Último entrenamiento: ${ultimaSesion.nombre || legible(ultimaSesion.bloque)}, hace ${dias(ultimaSesion.fecha)} días.` : "Todavía no registró entrenamientos.",
+    Object.keys(grupos).length ? `Series por músculo en 30 días: ${Object.entries(grupos).sort((a, b) => b[1] - a[1]).map(([g, n]) => `${g} ${n}`).join(", ")}.` : null,
+    cardio30.length ? `Salidas a correr o caminar en 30 días: ${cardio30.length}, ${cardio30.reduce((a, s) => a + (s.km || 0), 0).toFixed(1)} km en total.` : null,
+    cargas ? `Cargas actuales: ${cargas}.` : null
+  ].filter(Boolean).join("\n");
+
+  const sesiones_texto = ses.slice(-8).reverse().map(s => s.km != null
+    ? `${s.fecha}: ${s.nombre || legible(s.bloque)}, ${s.km} km en ${s.min} min, ${s.kcal} kcal`
+    : `${s.fecha}: ${s.nombre || legible(s.bloque)}, ${s.series} series, ${s.min} min, ${Math.round(s.volumen || 0)} kg movidos`
+  ).join("\n") || "Todavía no registró ninguna sesión.";
 
   return {
-    nombre: p.nombre || "",
-    sexo: p.sexo === "F" ? "femenino" : "masculino",
-    edad: p.edad, altura_cm: p.altura,
-    peso_kg: ultima.peso || p.peso,
-    peso_inicial_kg: primera.peso || null,
-    cambio_peso_kg: (ultima.peso && primera.peso) ? Number((ultima.peso - primera.peso).toFixed(1)) : null,
-    cintura_cm: ultima.cintura || null,
-    objetivo: objetivos[p.objetivo] || p.objetivo,
-    nivel: niveles[p.nivel] || p.nivel,
-    entrena_en: equipos[p.equipo] || p.equipo,
-    dias_por_semana: p.dias,
-    agenda: d.agenda || null,
-    sesiones_totales: (d.sesiones || []).length,
-    ultimas_sesiones: sesiones || [],
-    cargas_actuales: cargas,
+    ficha_texto: ficha,
+    sesiones_texto,
+    fecha_hoy: hoy,
+    /* por compatibilidad con la versión anterior del flujo */
+    nombre: p.nombre || "", sexo: p.sexo, edad, altura_cm: altura, peso_kg: peso,
+    objetivo: obj.nombre, nivel: NIVELES[p.nivel] || p.nivel, entrena_en: EQUIPOS[p.equipo] || p.equipo,
+    dias_por_semana: p.dias, sesiones_totales: ses.length, ultimas_sesiones: [], cargas_actuales: cargas,
     suscripcion: perfil.suscripcion_estado
   };
 }

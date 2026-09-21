@@ -15,6 +15,7 @@ function textoPlan() {
   if (!HAY_NUBE || !Cuenta.usuario || !a) return { txt: "Guardado solo en este teléfono", tono: "" };
   if (a.motivo === "prueba") return { txt: `Prueba gratis · ${a.diasRestantes} día${a.diasRestantes === 1 ? "" : "s"}`, tono: "aviso" };
   if (a.motivo === "suscripcion") return { txt: "Suscripción activa", tono: "bien" };
+  if (a.motivo === "admin") return { txt: "Administrador · acceso sin cargo", tono: "bien" };
   if (a.motivo === "cancelada-vigente") return { txt: "Cancelada · activa hasta " + fechaCorta(a.hasta.slice(0, 10)), tono: "aviso" };
   return { txt: "Sin suscripción", tono: "bad" };
 }
@@ -32,6 +33,7 @@ const ICO = {
   pago: `<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>`,
   tema: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>`,
   bajar: `<svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/></svg>`,
+  pdf: `<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>`,
   cel: `<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>`
 };
 
@@ -71,7 +73,8 @@ function abrirAjustes() {
 
     <div class="menu" style="margin-top:18px">
       ${inst === "boton" || inst === "ios" || inst === "ios-otro-navegador" ? filaMenu("aj-instalar", "Instalar en el teléfono", "Abre al toque y anda sin señal", ICO.cel) : ""}
-      ${filaMenu("cu-exportar", "Descargar mis datos", "Todo tu historial en un archivo", ICO.bajar)}
+      ${filaMenu("cu-informe", "Descargar mi informe", "PDF con tu evaluación, actividad y marcas", ICO.pdf)}
+      ${filaMenu("cu-exportar", "Copia de seguridad", "Archivo técnico con todos tus datos", ICO.bajar)}
     </div>
 
     <button class="btn block" id="cu-volver" style="margin-top:18px">Volver a la app</button>
@@ -94,11 +97,13 @@ function abrirAjustes() {
   });
   const bi = document.getElementById("aj-instalar");
   if (bi) bi.onclick = () => { cerrarSheet(); pedirInstalacion(); };
+  const inf = document.getElementById("cu-informe");
+  inf.onclick = () => descargarInforme(inf);
   document.getElementById("cu-exportar").onclick = () => {
     const blob = new Blob([JSON.stringify(snapshot(), null, 2)], { type: "application/json" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
-    a.download = "nivora-fit-" + hoyISO() + ".json";
+    a.download = "nivora-fit-copia-" + hoyISO() + ".json";
     a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
@@ -258,6 +263,7 @@ async function hojaPagos() {
   const plan = textoPlan();
   const precio = "$" + Number(CONFIG.PRECIO_MENSUAL).toLocaleString("es-AR");
   const activa = a.motivo === "suscripcion";
+  const admin = a.motivo === "admin";
 
   abrirSheet(`
     <div class="sheet-head"><button class="xbtn" id="volver" aria-label="Volver">‹</button>
@@ -267,13 +273,14 @@ async function hojaPagos() {
       <span class="plan-chip t-${plan.tono}">${esc(plan.txt)}</span>
       <p class="plan-precio">${precio}<span> por mes</span></p>
       <p class="sm muted" style="margin:0">${
-        activa && f.proximo_cobro ? `Próximo débito el ${fechaLarga(f.proximo_cobro)} con Mercado Pago.`
+        admin ? "Tu cuenta es de administrador: tenés acceso completo sin cargo y no se te cobra nada."
+        : activa && f.proximo_cobro ? `Próximo débito el ${fechaLarga(f.proximo_cobro)} con Mercado Pago.`
         : a.motivo === "prueba" ? `Tu prueba termina el ${fechaLarga(f.trial_fin)}. Si te suscribís ahora, no perdés los días que te quedan: el primer débito es al terminar la prueba.`
         : a.motivo === "cancelada-vigente" ? `No se te va a volver a cobrar. Podés usar la app hasta el ${fechaLarga(a.hasta)}.`
         : "Débito automático mensual con Mercado Pago. Cancelás cuando quieras."}</p>
     </div>
 
-    ${activa ? "" : `<button class="btn block" id="pg-suscribir" style="margin-top:14px">Suscribirme con Mercado Pago</button>`}
+    ${activa || admin ? "" : `<button class="btn block" id="pg-suscribir" style="margin-top:14px">Suscribirme con Mercado Pago</button>`}
     <p class="sm" id="pg-error" style="color:var(--bad);margin:8px 0 0;min-height:1px"></p>
 
     <label class="lbl" style="margin-top:14px">Comprobantes</label>

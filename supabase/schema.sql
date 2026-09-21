@@ -24,6 +24,10 @@ create table if not exists public.perfiles (
   actualizado         timestamptz not null default now()
 );
 
+-- Cuentas con acceso sin pagar (administradores, cortesías). Solo se cambia
+-- desde el SQL Editor: el usuario no puede escribir esta columna.
+alter table public.perfiles add column if not exists es_admin boolean not null default false;
+
 create index if not exists perfiles_preapproval_idx on public.perfiles (mp_preapproval_id);
 create index if not exists perfiles_estado_idx      on public.perfiles (suscripcion_estado);
 

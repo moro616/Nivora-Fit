@@ -26,6 +26,7 @@ const Cuenta = {
 /* ---------- acceso: prueba gratis o suscripción paga ---------- */
 function calcularAcceso(fila) {
   if (!fila) return { permitido: false, motivo: "sin-perfil", diasRestantes: 0 };
+  if (fila.es_admin) return { permitido: true, motivo: "admin" };
   if (fila.suscripcion_estado === "activa") {
     return { permitido: true, motivo: "suscripcion", proximoCobro: fila.proximo_cobro };
   }
@@ -69,6 +70,7 @@ async function iniciarApp() {
   pintar();
   estadoGuardado(Cuenta.acceso.motivo === "prueba"
     ? `Prueba · ${Cuenta.acceso.diasRestantes} día${Cuenta.acceso.diasRestantes === 1 ? "" : "s"}`
+    : Cuenta.acceso.motivo === "admin" ? "Administrador"
     : Cuenta.acceso.motivo === "cancelada-vigente" ? "Activa hasta " + fechaCorta(Cuenta.acceso.hasta.slice(0, 10))
     : "Sincronizado");
   if (!remoto || !remoto.updated) await subirEstado();
