@@ -29,6 +29,10 @@ function calcularAcceso(fila) {
   if (fila.suscripcion_estado === "activa") {
     return { permitido: true, motivo: "suscripcion", proximoCobro: fila.proximo_cobro };
   }
+  /* Canceló pero ya había pagado el mes: entra hasta la fecha del cobro que no va a pasar. */
+  if (fila.suscripcion_estado === "cancelada" && fila.proximo_cobro && new Date(fila.proximo_cobro) > new Date()) {
+    return { permitido: true, motivo: "cancelada-vigente", hasta: fila.proximo_cobro };
+  }
   const fin = fila.trial_fin ? new Date(fila.trial_fin) : null;
   if (fin && fin > new Date()) {
     const dias = Math.ceil((fin - new Date()) / 86400000);
@@ -64,7 +68,8 @@ async function iniciarApp() {
   ocultarPantallasDeCuenta();
   pintar();
   estadoGuardado(Cuenta.acceso.motivo === "prueba"
-    ? `Prueba gratis · te quedan ${Cuenta.acceso.diasRestantes} día${Cuenta.acceso.diasRestantes === 1 ? "" : "s"}`
+    ? `Prueba · ${Cuenta.acceso.diasRestantes} día${Cuenta.acceso.diasRestantes === 1 ? "" : "s"}`
+    : Cuenta.acceso.motivo === "cancelada-vigente" ? "Activa hasta " + fechaCorta(Cuenta.acceso.hasta.slice(0, 10))
     : "Sincronizado");
   if (!remoto || !remoto.updated) await subirEstado();
 }
@@ -298,22 +303,7 @@ function mostrarMuroPago() {
 
   const err = m => { document.getElementById("mu-error").textContent = m || ""; };
   const b = document.getElementById("mu-suscribir");
-  b.onclick = async () => {
-    b.disabled = true; b.textContent = "Abriendo Mercado Pago..."; err("");
-    try {
-      const { data: { session } } = await SB.auth.getSession();
-      const r = await fetch("/.netlify/functions/crear-suscripcion", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token }
-      });
-      const j = await r.json();
-      if (!r.ok || !j.init_point) throw new Error(j.error || "sin init_point");
-      window.location.href = j.init_point;
-    } catch (e) {
-      err("No pudimos abrir el pago en este momento. Probá de nuevo en un rato.");
-      b.disabled = false; b.textContent = "Suscribirme con Mercado Pago";
-    }
-  };
+  b.onclick = () => irAPagar(b, document.getElementById("mu-error"));
   document.getElementById("mu-refrescar").onclick = async () => {
     await cargarPerfil();
     if (Cuenta.acceso.permitido) { ocultarPantallasDeCuenta(); await iniciarApp(); }
@@ -326,7 +316,8 @@ async function cerrarSesion() {
   await SB.auth.signOut();
   lsBorrar();
   Cuenta.usuario = null; Cuenta.perfil = null; Cuenta.acceso = null;
-  S.perfil = null; S.medidas = []; S.cargas = {}; S.sesiones = []; S.activa = null; S.agenda = null;
+  S.perfil = null; S.medidas = []; S.cargas = {}; S.sesiones = []; S.activa = null; S.agenda = null; S.cardio = null;
+  if (typeof pararGPS === "function") pararGPS();
   mostrarAcceso("login");
 }
 

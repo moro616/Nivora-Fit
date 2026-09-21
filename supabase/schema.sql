@@ -196,3 +196,20 @@ select
 from public.perfiles p
 left join public.sesiones s on s.usuario_id = p.id
 group by p.id, p.email, p.suscripcion_estado;
+
+-- ============================================================
+-- PERMISOS DE TABLA
+-- Los proyectos nuevos de Supabase no les dan acceso automático a las
+-- tablas a los usuarios logueados. Sin esto la app no puede leer el
+-- perfil y se queda en "Estamos preparando tu cuenta".
+-- RLS sigue limitando a cada persona a lo suyo.
+-- ============================================================
+grant usage on schema public to authenticated, service_role;
+
+grant select on public.perfiles to authenticated;
+grant update (datos, actualizado) on public.perfiles to authenticated;
+grant select, insert, update, delete on public.sesiones, public.medidas to authenticated;
+grant select on public.chat_mensajes, public.pagos to authenticated;
+
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;

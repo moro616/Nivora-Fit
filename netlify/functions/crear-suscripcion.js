@@ -20,7 +20,7 @@ exports.handler = async (event) => {
   try {
     // ¿Ya tiene una suscripción viva? No creamos una segunda.
     const { data: perfil } = await admin
-      .from("perfiles").select("mp_preapproval_id, suscripcion_estado")
+      .from("perfiles").select("mp_preapproval_id, suscripcion_estado, trial_fin")
       .eq("id", usuario.id).maybeSingle();
 
     if (perfil && perfil.mp_preapproval_id) {
@@ -32,6 +32,9 @@ exports.handler = async (event) => {
     }
 
     const precio = Number(process.env.PRECIO_MENSUAL || 10000);
+    /* Si se suscribe durante la prueba, el primer débito espera a que la prueba termine. */
+    const finPrueba = perfil && perfil.trial_fin ? new Date(perfil.trial_fin) : null;
+    const arranque = finPrueba && finPrueba.getTime() > Date.now() + 3600000 ? finPrueba.toISOString() : null;
     const suscripcion = await mp("/preapproval", {
       method: "POST",
       body: JSON.stringify({
@@ -44,7 +47,8 @@ exports.handler = async (event) => {
           frequency: 1,
           frequency_type: "months",
           transaction_amount: precio,
-          currency_id: process.env.MONEDA || "ARS"
+          currency_id: process.env.MONEDA || "ARS",
+          ...(arranque ? { start_date: arranque } : {})
         }
       })
     });

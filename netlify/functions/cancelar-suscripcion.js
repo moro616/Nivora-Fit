@@ -22,8 +22,9 @@ exports.handler = async (event) => {
       body: JSON.stringify({ status: "cancelled" })
     });
     await admin.from("perfiles").update({
+      /* proximo_cobro queda: marca hasta cuándo ya está pago y la app
+         deja entrar hasta esa fecha aunque la suscripción esté cancelada. */
       suscripcion_estado: "cancelada",
-      proximo_cobro: null,
       actualizado: new Date().toISOString()
     }).eq("id", usuario.id);
     return json(200, { ok: true });

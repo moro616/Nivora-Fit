@@ -12,6 +12,7 @@ const S = {
   sesiones: [],    /* entrenamientos terminados */
   activa: null,    /* el entrenamiento en curso, si hay uno */
   agenda: null,    /* la rutina de hoy ya armada */
+  cardio: null,    /* la salida a correr o caminar en curso */
   vista: "hoy",
   updated: 0
 };
@@ -47,7 +48,7 @@ const CLAVE = "nivora.v1";
 function snapshot() {
   return {
     perfil: S.perfil, medidas: S.medidas, cargas: S.cargas,
-    sesiones: S.sesiones.slice(-200), activa: S.activa, agenda: S.agenda,
+    sesiones: S.sesiones.slice(-200), activa: S.activa, agenda: S.agenda, cardio: S.cardio,
     updated: Date.now()
   };
 }
@@ -59,6 +60,7 @@ function restaurar(d) {
   S.sesiones = d.sesiones || [];
   S.activa = d.activa || null;
   S.agenda = d.agenda || null;
+  S.cardio = d.cardio || null;
   S.updated = d.updated || 0;
 }
 function lsGet() {
