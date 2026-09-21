@@ -11,7 +11,7 @@
    Al publicar cambios grandes, subí VERSION: se borra lo viejo.
    ============================================================ */
 
-const VERSION = "nivora-v8";
+const VERSION = "nivora-v9";
 const PACIENCIA = 3500;
 
 /* Lo mínimo para que la app arranque sin conexión. */
@@ -38,6 +38,7 @@ const BASE = [
   "/js/panel.js",
   "/js/cuenta.js",
   "/js/informe.js",
+  "/js/clima.js",
   "/js/entrenador.js",
   "/js/nube.js",
   "/js/arranque.js",

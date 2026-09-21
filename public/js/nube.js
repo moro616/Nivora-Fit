@@ -51,6 +51,11 @@ async function iniciarApp() {
   if (!session) { lsBorrar(); mostrarAcceso(); return; }
 
   Cuenta.usuario = { id: session.user.id, email: session.user.email };
+  try { Cuenta.ultimoUsuario = localStorage.getItem("nivora.usuario"); } catch (e) { /* nada */ }
+  /* Datos de otra cuenta en este teléfono: no se mezclan nunca. */
+  if (local && Cuenta.ultimoUsuario && Cuenta.ultimoUsuario !== session.user.id) {
+    lsBorrar(); restaurar({});
+  }
   await cargarPerfil();
 
   /* El perfil lo crea la base apenas te registrás, pero puede tardar un
@@ -60,10 +65,12 @@ async function iniciarApp() {
   if (!Cuenta.perfil) { mostrarPreparando(); return; }
   if (!Cuenta.acceso.permitido) { mostrarMuroPago(); return; }
 
-  // el servidor manda: si tiene datos más nuevos que los locales, gana el servidor
+  /* Se juntan los datos de este teléfono con los del servidor: nada se pisa. */
   const remoto = Cuenta.perfil && Cuenta.perfil.datos;
-  if (remoto && remoto.updated && (!local || remoto.updated > (local.updated || 0))) {
-    restaurar(remoto); lsSet();
+  if (remoto && remoto.updated) {
+    const mismoUsuario = local && local.perfil && (!Cuenta.ultimoUsuario || Cuenta.ultimoUsuario === Cuenta.usuario.id);
+    restaurar(mismoUsuario ? fusionar(local, remoto) : remoto);
+    lsSet();
   }
   aplicarTema();
   ocultarPantallasDeCuenta();
@@ -72,8 +79,9 @@ async function iniciarApp() {
     ? `Prueba · ${Cuenta.acceso.diasRestantes} día${Cuenta.acceso.diasRestantes === 1 ? "" : "s"}`
     : Cuenta.acceso.motivo === "admin" ? "Administrador"
     : Cuenta.acceso.motivo === "cancelada-vigente" ? "Activa hasta " + fechaCorta(Cuenta.acceso.hasta.slice(0, 10))
-    : "Sincronizado");
+    : "Sincronizado", true);
   if (!remoto || !remoto.updated) await subirEstado();
+  else { Cuenta.ultimoUsuario = Cuenta.usuario.id; try { localStorage.setItem("nivora.usuario", Cuenta.usuario.id); } catch (e) { /* nada */ } }
 }
 
 async function cargarPerfil() {
@@ -85,38 +93,78 @@ async function cargarPerfil() {
 }
 
 /* ---------- guardado ---------- */
-let tGuardar = null;
+let tGuardar = null, pendiente = false;
 function guardar(nota) {
+  S.updated = Date.now();
   lsSet();
   estadoGuardado(nota || "Guardado");
+  pendiente = true;
   clearTimeout(tGuardar);
   tGuardar = setTimeout(subirEstado, 1200);
 }
-async function subirEstado() {
-  if (!Cuenta.usuario || Cuenta.sincronizando) return;
+
+/* Subida segura:
+   1. lee lo que hay en el servidor y lo junta con lo de este teléfono;
+   2. escribe solo si nadie escribió en el medio (se compara "actualizado");
+   3. si otro teléfono escribió justo antes, vuelve a juntar y reintenta.
+   forzar: para "Borrar todo", donde lo que se quiere es justamente pisar. */
+async function subirEstado(forzar) {
+  if (!Cuenta.usuario) return;
+  if (Cuenta.sincronizando) { pendiente = true; return; }
   Cuenta.sincronizando = true;
+  pendiente = false;
+  const uid = Cuenta.usuario.id;
   try {
-    const { error } = await SB.from("perfiles")
-      .update({ datos: snapshot(), actualizado: new Date().toISOString() })
-      .eq("id", Cuenta.usuario.id);
-    if (error) throw error;
-    estadoGuardado("Guardado");
-    await sincronizarTablas();
+    for (let intento = 0; intento < 4; intento++) {
+      const { data: fila, error: e1 } = await SB.from("perfiles").select("datos, actualizado").eq("id", uid).maybeSingle();
+      if (e1) throw e1;
+      if (!forzar && fila && fila.datos && fila.datos.updated) {
+        const antes = S.sesiones.length + S.medidas.length;
+        restaurar(fusionar(snapshot(), fila.datos));
+        lsSet();
+        if (S.sesiones.length + S.medidas.length !== antes && !S.activa && !S.cardio) pintar();
+      }
+      let q = SB.from("perfiles").update({ datos: snapshot(true), actualizado: new Date().toISOString() }).eq("id", uid);
+      if (fila && fila.actualizado) q = q.eq("actualizado", fila.actualizado);
+      const { data, error } = await q.select("id");
+      if (error) throw error;
+      if (data && data.length) {
+        estadoGuardado("Guardado");
+        Cuenta.ultimoUsuario = uid;
+        try { localStorage.setItem("nivora.usuario", uid); } catch (e) { /* nada */ }
+        await sincronizarTablas();
+        return;
+      }
+      await new Promise(r => setTimeout(r, 300 + Math.random() * 500));
+    }
+    throw new Error("no se pudo guardar sin pisar otro cambio");
   } catch (e) {
-    estadoGuardado("Guardado · se sube al volver");
+    pendiente = true;
+    estadoGuardado("Guardado en el teléfono · se sube al volver la señal");
   } finally {
     Cuenta.sincronizando = false;
+    if (pendiente) { clearTimeout(tGuardar); tGuardar = setTimeout(subirEstado, 4000); }
   }
 }
+
+/* Si se corta la señal o se cierra la app con algo sin subir, se reintenta. */
+window.addEventListener("online", () => { if (pendiente) subirEstado(); });
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden" && pendiente && !Cuenta.sincronizando) { clearTimeout(tGuardar); subirEstado(); }
+});
 
 /* Además del snapshot, las sesiones y las medidas van a tablas propias:
    sirven para métricas, para exportar y para cualquier consulta SQL posterior. */
 async function sincronizarTablas() {
   if (!Cuenta.usuario) return;
   const uid = Cuenta.usuario.id;
-  const sesiones = S.sesiones.slice(-60).map(s => ({
-    usuario_id: uid, fecha: s.fecha, bloque: s.bloque, series: s.series,
-    minutos: Math.round(s.min || 0), kcal: Math.round(s.kcal || 0), volumen: Math.round(s.volumen || 0)
+  /* La primera vez sube todo el historial; después, lo último. */
+  let todo = false;
+  try { todo = localStorage.getItem("nivora.tablas") !== "2:" + uid; } catch (e) { /* nada */ }
+  const sesiones = (todo ? S.sesiones : S.sesiones.slice(-60)).map(s => ({
+    usuario_id: uid, uid: s.id, fecha: s.fecha, bloque: s.bloque, series: s.series || 0,
+    minutos: Math.round(s.min || 0), kcal: Math.round(s.kcal || 0), volumen: Math.round(s.volumen || 0),
+    km: s.km == null ? null : Number(s.km)
   }));
   const medidas = S.medidas.slice(-60).map(m => {
     const ev = evaluar(S.perfil, m);
@@ -125,8 +173,12 @@ async function sincronizarTablas() {
       brazo: m.brazo || null, muslo: m.muslo || null, pantorrilla: m.pantorrilla || null,
       grasa_pct: ev && ev.grasa != null ? Number(ev.grasa.toFixed(2)) : null };
   });
-  if (sesiones.length) await SB.from("sesiones").upsert(sesiones, { onConflict: "usuario_id,fecha,bloque" });
+  for (let i = 0; i < sesiones.length; i += 200) {
+    const { error } = await SB.from("sesiones").upsert(sesiones.slice(i, i + 200), { onConflict: "usuario_id,uid" });
+    if (error) { console.warn("tabla sesiones:", error.message); return; }
+  }
   if (medidas.length) await SB.from("medidas").upsert(medidas, { onConflict: "usuario_id,fecha" });
+  try { localStorage.setItem("nivora.tablas", "2:" + uid); } catch (e) { /* nada */ }
 }
 
 /* Reintenta un rato: tres vueltas, un segundo y medio entre cada una. */
@@ -205,8 +257,13 @@ function mostrarAcceso(modo) {
       <div class="field"><label for="ac-email">Correo</label>
         <input id="ac-email" type="email" inputmode="email" autocomplete="email" placeholder="vos@correo.com"></div>
       <div class="field"><label for="ac-pass">Contraseña</label>
-        <input id="ac-pass" type="password" autocomplete="${registro ? "new-password" : "current-password"}"
-          placeholder="${registro ? "Al menos 8 caracteres" : "Tu contraseña"}"></div>
+        <div class="pass-caja">
+          <input id="ac-pass" type="password" autocomplete="${registro ? "new-password" : "current-password"}"
+            placeholder="${registro ? "Al menos 8 caracteres" : "Tu contraseña"}">
+          <button type="button" class="pass-ver" id="ac-ver" aria-label="Mostrar contraseña" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="tacha" d="M4 4l16 16"/></svg>
+          </button>
+        </div></div>
       ${registro ? `<label class="consentimiento" style="margin:0 0 12px">
         <input type="checkbox" id="ac-acepto">
         <span>Acepto los <a href="/terminos/" target="_blank" rel="noopener">términos y condiciones</a> y la
@@ -225,6 +282,15 @@ function mostrarAcceso(modo) {
     </div>`;
 
   const err = m => { document.getElementById("ac-error").textContent = m || ""; };
+  const ver = document.getElementById("ac-ver");
+  ver.onclick = () => {
+    const i = document.getElementById("ac-pass");
+    const mostrar = i.type === "password";
+    i.type = mostrar ? "text" : "password";
+    ver.setAttribute("aria-pressed", mostrar);
+    ver.setAttribute("aria-label", mostrar ? "Ocultar contraseña" : "Mostrar contraseña");
+    i.focus();
+  };
   const boton = document.getElementById("ac-enviar");
 
   boton.onclick = async () => {
@@ -324,8 +390,11 @@ function mostrarMuroPago() {
 }
 
 async function cerrarSesion() {
+  clearTimeout(tGuardar);
+  if (pendiente) { try { await subirEstado(); } catch (e) { /* nada */ } }
   await SB.auth.signOut();
   lsBorrar();
+  try { localStorage.removeItem("nivora.usuario"); localStorage.removeItem("nivora.rutas"); localStorage.removeItem("nivora.tablas"); } catch (e) { /* nada */ }
   Cuenta.usuario = null; Cuenta.perfil = null; Cuenta.acceso = null;
   S.perfil = null; S.medidas = []; S.cargas = {}; S.sesiones = []; S.activa = null; S.agenda = null; S.cardio = null;
   if (typeof pararGPS === "function") pararGPS();

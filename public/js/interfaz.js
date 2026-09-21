@@ -15,9 +15,16 @@ function toast(msg) {
   tToast = setTimeout(() => t.classList.remove("ver"), 2600);
 }
 
-function estadoGuardado(texto) {
+/* El chip de arriba muestra el plan (Administrador, Prueba…) y, por un
+   momento, avisos como "Guardado". Después vuelve solo al plan. */
+let chipBase = "", tChip = null;
+function estadoGuardado(texto, fijo) {
   const c = document.getElementById("chip");
-  if (c) c.textContent = texto;
+  if (!c) return;
+  if (fijo) chipBase = texto;
+  c.textContent = texto;
+  clearTimeout(tChip);
+  if (!fijo && chipBase && texto !== chipBase) tChip = setTimeout(() => { c.textContent = chipBase; }, 2500);
 }
 
 /* Las hojas se cierran con la ✕, tocando afuera o con el botón "atrás"
@@ -86,6 +93,8 @@ function pintar() {
     if (el) el.hidden = v !== activa;
   });
   document.getElementById("tabbar").hidden = !S.perfil;
+  const pie = document.getElementById("pie");
+  if (pie && !pie.innerHTML && typeof pieLegal === "function") pie.innerHTML = pieLegal();
 
   if (!S.perfil) return vistaSetup();
   if (activa === "hoy") return vistaHoy();
@@ -277,6 +286,7 @@ function vistaHoy() {
     : `Último entrenamiento ${diaRelativo(S.sesiones[S.sesiones.length - 1].fecha)}.`;
 
   v.innerHTML = `
+    ${tarjetaClima()}
     <div class="hero">
       <p class="eyebrow">Hoy te toca</p>
       <h2>${esc(r.nombre)}</h2>
@@ -308,6 +318,7 @@ function vistaHoy() {
 
   document.getElementById("empezar").onclick = empezarSesion;
   conectarTarjetaCardio();
+  conectarClima();
   conectarInstalar();
   document.getElementById("poco-tiempo").onclick = () => {
     abrirSheet(`<div class="sheet-head"><h3>¿Cuánto tiempo tenés?</h3>
@@ -675,7 +686,7 @@ function terminarSesion() {
   });
   pararCrono();
 
-  S.sesiones.push({ fecha: a.fecha, bloque: a.bloque, nombre: a.nombre, tipo: "gimnasio", series, min, kcal, volumen, grupos });
+  S.sesiones.push({ id: nuevoId(), fecha: a.fecha, bloque: a.bloque, nombre: a.nombre, tipo: "gimnasio", series, min, kcal, volumen, grupos });
 
   /* Progresión: quien completó todo arriba del rango, la próxima sube. */
   const subieron = [];
@@ -742,15 +753,17 @@ function vistaAgenda() {
     </div>
 
     <p class="eyebrow" style="margin:22px 2px 10px">Historial</p>
-    ${S.sesiones.length ? `<div class="exlist">${S.sesiones.slice().reverse().slice(0, 20).map(s => `
+    ${S.sesiones.length ? `<div class="exlist">${S.sesiones.slice().reverse().slice(0, 20).map(s => rutaDe(s.id) ? `
+      <button class="exrow" data-ruta="${esc(s.id)}">` : `
       <div class="exrow estatico">
         <span class="exnum">${esc(fechaCorta(s.fecha).split(" ")[0])}</span>
         <span class="extxt"><b>${esc(s.nombre || BLOQUES[s.bloque] && BLOQUES[s.bloque].nombre || s.bloque)}</b>
           <small>${s.km != null ? redondear(s.km, 2) + " km · " + s.min + "′ · " + s.kcal + " kcal"
             : s.series + " series · " + s.min + "′ · " + s.kcal + " kcal"}</small></span>
-        <span class="exver">${esc(fechaCorta(s.fecha))}</span>
-      </div>`).join("")}</div>`
+        <span class="exver">${rutaDe(s.id) ? "ver mapa" : esc(fechaCorta(s.fecha))}</span>
+      ${rutaDe(s.id) ? "</button>" : "</div>"}`).join("")}</div>`
       : `<p class="vacio">Todavía no hay entrenamientos cargados. El primero aparece acá apenas lo termines.</p>`}`;
+  v.querySelectorAll("[data-ruta]").forEach(b => b.onclick = () => verRuta(b.dataset.ruta));
 }
 
 function diaSemana(iso) { const d = new Date(iso + "T00:00:00").getDay(); return (d + 6) % 7; }

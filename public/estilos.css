@@ -691,3 +691,72 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .consentimiento input { width: 18px; height: 18px; flex: 0 0 18px; margin: 1px 0 0; accent-color: var(--ink); }
 .consentimiento a, .legales a { color: var(--ink-2); }
 .legales { font-size: 12.5px; color: var(--muted); text-align: center; margin: 16px 0 0; }
+
+/* ============================================================
+   v9 — clima, mapa, contraseña visible, pie
+   ============================================================ */
+/* ---------- clima ---------- */
+.clima { display: flex; align-items: center; gap: 12px; width: 100%; text-align: left; margin: 0 0 12px;
+  padding: 12px 14px; border-radius: var(--r); background: var(--card); border: 1px solid var(--linea);
+  color: var(--ink); font: inherit; cursor: pointer; }
+.clima.vacio { border-style: dashed; }
+.clima-ico { width: 30px; height: 30px; flex: 0 0 30px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.clima-temp { font-family: var(--f-num); font-size: 26px; font-weight: 600; letter-spacing: -.02em; }
+.clima-txt { flex: 1; min-width: 0; }
+.clima-txt b { display: block; font-size: 13.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clima-txt small { display: block; font-size: 12px; color: var(--muted); line-height: 1.35; }
+.clima-txt small.t-bien { color: var(--bien); } .clima-txt small.t-aviso { color: var(--aviso); } .clima-txt small.t-bad { color: var(--bad); }
+.clima-grande { display: flex; align-items: center; gap: 16px; }
+.clima-grande .clima-ico { width: 54px; height: 54px; flex-basis: 54px; stroke-width: 1.3; }
+.clima-grande b { display: block; font-family: var(--f-num); font-size: 44px; font-weight: 600; line-height: 1; }
+.clima-grande span { color: var(--ink-2); font-size: 14px; }
+.clima-horas { display: grid; grid-auto-flow: column; grid-auto-columns: 58px; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.clima-horas > div { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px;
+  border-radius: 12px; background: var(--card-2); }
+.clima-horas small { font-size: 11px; color: var(--muted); }
+.clima-horas .clima-ico { width: 22px; height: 22px; flex-basis: 22px; }
+.clima-horas b { font-family: var(--f-num); font-size: 15px; }
+.clima-horas i { font-style: normal; font-size: 10px; color: var(--muted); }
+
+/* ---------- contraseña ---------- */
+.pass-caja { position: relative; }
+.pass-caja input { padding-right: 48px; }
+.pass-ver { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 40px; height: 40px;
+  border: 0; background: transparent; color: var(--muted); display: grid; place-items: center; cursor: pointer; border-radius: 10px; }
+.pass-ver svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.pass-ver .tacha { display: none; }
+.pass-ver[aria-pressed="true"] { color: var(--ink); }
+.pass-ver[aria-pressed="true"] .tacha { display: inline; }
+
+/* ---------- chat ---------- */
+.sheet-head .linkbtn.chico { margin-left: auto; font-size: 12.5px; }
+.sheet-head .linkbtn.chico + .xbtn { margin-left: 4px; }
+
+/* ---------- correr / caminar ---------- */
+.cardio-vivo.preparando { position: relative; }
+.prep-tit { font-size: 22px; font-weight: 800; margin: 8px 0 4px; }
+.btn.grande { padding: 18px; font-size: 18px; }
+.cardio-cuenta { position: absolute; inset: 0; display: grid; place-items: center; border-radius: 22px;
+  background: var(--card); font-family: var(--f-num); font-size: 110px; font-weight: 600; color: var(--ink); }
+.mapa-vivo, .mapa-ruta { height: 220px; margin-top: 12px; border-radius: 18px; overflow: hidden;
+  border: 1px solid var(--linea-2); background: var(--card-2); position: relative; z-index: 0; }
+.mapa-ruta { height: 280px; }
+.mapa-sin { display: grid; place-items: center; height: 100%; margin: 0; font-size: 13px; color: var(--muted); }
+.mapa-vivo.leaflet-container, .mapa-ruta.leaflet-container { background: var(--card-2); font-family: var(--f-body); }
+#v-acceso a { color: var(--ink-2); }
+.leaflet-control-attribution { font-size: 9.5px !important; background: rgba(0,0,0,.45) !important; color: #ddd !important; }
+.leaflet-control-attribution a { color: #fff !important; }
+:root:not([data-theme="claro"]) .leaflet-tile-pane { filter: grayscale(1) invert(1) brightness(.9) contrast(.9); }
+@media (prefers-color-scheme: light) { :root:not([data-theme="oscuro"]) .leaflet-tile-pane { filter: grayscale(1) contrast(1.05); } }
+:root[data-theme="claro"] .leaflet-tile-pane { filter: grayscale(1) contrast(1.05); }
+.ruta-linea { stroke: var(--ink); }
+.ruta-yo { fill: var(--ink); stroke: var(--card); stroke-width: 3; }
+.ruta-inicio { fill: var(--bien); stroke: var(--card); stroke-width: 2.5; }
+.ruta-fin { fill: var(--ink); stroke: var(--card); stroke-width: 2.5; }
+
+/* ---------- pie ---------- */
+.pie-app { text-align: center; font-size: 11.5px; line-height: 1.6; color: var(--muted); padding: 26px 8px 8px; }
+.pie-app p { margin: 0; }
+.pie-app b { color: var(--ink-2); font-weight: 600; }
+.pie-app a { color: var(--muted); }
+#pie { padding: 0 0 8px; }

@@ -23,6 +23,7 @@ function abrirEntrenador() {
   abrirSheet(`
     <div class="sheet-head">
       <h3>Tu entrenador</h3>
+      <button class="linkbtn chico" id="chat-borrar" ${Chat.mensajes.length ? "" : "hidden"}>Borrar historial</button>
       <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button>
     </div>
     <div class="chat" id="chat-hilo"></div>
@@ -35,13 +36,36 @@ function abrirEntrenador() {
     y se acuerda de lo que hablaron antes. No reemplaza a un médico ni a un nutricionista.</p>`);
 
   document.getElementById("chat-form").onsubmit = e => { e.preventDefault(); enviarMensaje(); };
+  document.getElementById("chat-borrar").onclick = borrarHistorial;
   cargarHistorial().then(pintarChat);
   pintarChat();
+}
+
+async function borrarHistorial() {
+  if (!confirm("¿Borrás toda la conversación? El entrenador también se olvida de lo que hablaron. Tu perfil y tus entrenamientos no se tocan.")) return;
+  const b = document.getElementById("chat-borrar");
+  if (b) { b.disabled = true; b.textContent = "Borrando…"; }
+  try {
+    const { data: { session } } = await SB.auth.getSession();
+    const r = await fetch("/.netlify/functions/borrar-chat", {
+      method: "POST", headers: { "Authorization": "Bearer " + session.access_token }
+    });
+    if (!r.ok) throw new Error("http-" + r.status);
+    Chat.mensajes = [];
+    pintarChat();
+    toast("Conversación borrada.");
+  } catch (e) {
+    toast("No se pudo borrar ahora. Probá de nuevo en un rato.");
+  } finally {
+    if (b) { b.disabled = false; b.textContent = "Borrar historial"; }
+  }
 }
 
 function pintarChat() {
   const hilo = document.getElementById("chat-hilo");
   if (!hilo) return;
+  const bb = document.getElementById("chat-borrar");
+  if (bb) bb.hidden = !Chat.mensajes.length;
   if (!Chat.mensajes.length && !Chat.enviando) {
     const nombre = S.perfil && S.perfil.nombre ? S.perfil.nombre.split(" ")[0] : "";
     hilo.innerHTML = `<div class="chat-vacio">

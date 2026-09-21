@@ -53,7 +53,7 @@
   <tr><td>Salud y cuerpo</td><td>Peso, medidas con cinta (cuello, cintura, cadera y otras), molestias físicas que marques y nivel de actividad diaria.</td><td>El peso sí; lo demás, opcional</td></tr>
   <tr><td>Contacto</td><td>Teléfono, ciudad y foto de perfil.</td><td>No</td></tr>
   <tr><td>Actividad</td><td>Entrenamientos, series, repeticiones, cargas, tiempos y salidas a correr o caminar (distancia, duración y ritmo).</td><td>Se genera al usar la app</td></tr>
-  <tr><td>Ubicación</td><td>Solo mientras hacés una salida con el modo correr o caminar, y solo si das permiso. La usamos para medir la distancia; no guardamos el recorrido ni tus coordenadas.</td><td>No</td></tr>
+  <tr><td>Ubicación</td><td>Solo si das permiso. Durante una salida de correr o caminar la usamos para medir distancia y dibujar tu recorrido en el mapa: <strong>el recorrido queda guardado solo en tu teléfono</strong> y no se sube a nuestros servidores. Para mostrarte el clima usamos tu ubicación aproximada (redondeada a unos 1 km), que no guardamos.</td><td>No</td></tr>
   <tr><td>Chat</td><td>Los mensajes que le mandás al entrenador de IA y sus respuestas.</td><td>Solo si usás el chat</td></tr>
   <tr><td>Pagos</td><td>Estado de la suscripción, montos, fechas y números de operación de Mercado Pago. No recibimos ni guardamos datos de tarjetas.</td><td>Solo si te suscribís</td></tr>
 </table>
@@ -81,6 +81,8 @@
   <tr><td>Netlify</td><td>Alojamiento de la app y del servidor que procesa pagos y chat.</td></tr>
   <tr><td>Mercado Pago</td><td>Cobro de la suscripción. Tus datos de pago los maneja Mercado Pago bajo su propia política de privacidad.</td></tr>
   <tr><td>OpenAI</td><td>Modelo de inteligencia artificial del chat. Recibe tu mensaje y un resumen de tu perfil y tus entrenamientos; no recibe tu correo ni tu contraseña. Según las condiciones de su servicio para desarrolladores, no usa estos datos para entrenar sus modelos.</td></tr>
+  <tr><td>MET Norway</td><td>Pronóstico del clima. Recibe solo una ubicación aproximada (a ~1 km), a través de nuestro servidor, sin tu IP ni ningún dato tuyo.</td></tr>
+  <tr><td>OpenStreetMap</td><td>Las imágenes del mapa del recorrido. Tu teléfono las descarga de sus servidores, que ven tu dirección IP y la zona del mapa que se muestra, como pasa con cualquier página web.</td></tr>
   <tr><td>n8n (servidor propio)</td><td>Orquesta el chat y guarda el historial de la conversación para que el entrenador recuerde lo que hablaron.</td></tr>
 </table>
 <p>También podemos compartir datos si lo ordena una autoridad judicial o administrativa competente.</p>
@@ -92,7 +94,8 @@
 <ul>
   <li>Mientras tu cuenta exista, para que no pierdas tu historial aunque pauses la suscripción.</li>
   <li>Si pedís borrar la cuenta, eliminamos tus datos dentro de los 5 días hábiles, salvo los registros de pagos que la ley nos obliga a conservar por motivos fiscales y contables (hasta 10 años).</li>
-  <li>El historial del chat se conserva mientras tengas la cuenta; podés pedir que lo borremos en cualquier momento.</li>
+  <li>El historial del chat se conserva mientras tengas la cuenta; lo podés borrar vos en cualquier momento desde el chat, con "Borrar historial".</li>
+  <li>Guardamos copias de seguridad automáticas de tus datos (las últimas 30 versiones) para poder recuperarlos ante un error. Se borran junto con tu cuenta.</li>
 </ul>
 
 <h2 id="derechos">8. Tus derechos</h2>
@@ -109,7 +112,7 @@
 <p>Toda la comunicación viaja cifrada (HTTPS). Cada persona solo puede leer y modificar sus propios datos: la base de datos lo controla con reglas de acceso por usuario. Las contraseñas se guardan cifradas y las claves de los servicios nunca llegan a tu teléfono. Ningún sistema es infalible: si detectamos un incidente que afecte tus datos, te avisamos y tomamos las medidas necesarias.</p>
 
 <h2 id="telefono">10. Lo que queda en tu teléfono</h2>
-<p>La app guarda una copia de tus datos en el almacenamiento del navegador de tu teléfono, para que funcione sin señal en el gimnasio, y recuerda tu preferencia de tema claro u oscuro. No usamos cookies de publicidad ni herramientas de seguimiento de terceros. Al cerrar sesión, esa copia se borra del teléfono.</p>
+<p>La app guarda una copia de tus datos en el almacenamiento del navegador de tu teléfono, para que funcione sin señal en el gimnasio, junto con los recorridos de tus salidas, el último clima consultado y tu preferencia de tema claro u oscuro. No usamos cookies de publicidad ni herramientas de seguimiento de terceros. Al cerrar sesión, esa copia y los recorridos se borran del teléfono.</p>
 
 <h2 id="menores">11. Menores de edad</h2>
 <p>Nivora Fit está pensada para mayores de 18 años. Los mayores de 13 y menores de 18 solo pueden usarla con autorización y supervisión de su madre, padre o tutor, que puede ejercer los derechos del punto 8 en su nombre. Si detectamos una cuenta de un menor de 13 años, la eliminamos.</p>

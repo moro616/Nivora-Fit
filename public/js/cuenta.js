@@ -5,6 +5,21 @@
    apariencia y la salida. Cada sección abre su propia hoja.
    ============================================================ */
 
+const VERSION_APP = "1.0";
+const CONTACTO = "moro_511@live.com.ar";
+
+/* El pie que aparece al final del menú y de cada pantalla. */
+function pieLegal() {
+  return `<footer class="pie-app">
+    <p>© 2026 Todos los derechos reservados</p>
+    <p><b>Nivora Fit</b> · versión ${VERSION_APP} · hecho por Metrics Lab Agency</p>
+    <p><a href="/terminos/" target="_blank" rel="noopener">Términos</a> ·
+      <a href="/privacidad/" target="_blank" rel="noopener">Privacidad</a> ·
+      <a href="/arrepentimiento/" target="_blank" rel="noopener">Botón de arrepentimiento</a> ·
+      <a href="mailto:${CONTACTO}">Contacto</a></p>
+  </footer>`;
+}
+
 function avatarHTML(p, clase) {
   if (p && p.foto) return `<img class="${clase || ""}" src="${p.foto}" alt="">`;
   return esc(iniciales(p && p.nombre));
@@ -33,6 +48,8 @@ const ICO = {
   pago: `<svg viewBox="0 0 24 24"><rect x="3" y="5.5" width="18" height="13" rx="2.5"/><path d="M3 10h18M7 15h4"/></svg>`,
   tema: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"/></svg>`,
   bajar: `<svg viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/></svg>`,
+  ayuda: `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 1 1 3.3 2.4c-.6.3-.9.8-.9 1.4v.6M12 16.8h.01"/></svg>`,
+  salir: `<svg viewBox="0 0 24 24"><path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M10 16l-4-4 4-4M6 12h10"/></svg>`,
   pdf: `<svg viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h4"/></svg>`,
   cel: `<svg viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/></svg>`
 };
@@ -75,18 +92,24 @@ function abrirAjustes() {
       ${inst === "boton" || inst === "ios" || inst === "ios-otro-navegador" ? filaMenu("aj-instalar", "Instalar en el teléfono", "Abre al toque y anda sin señal", ICO.cel) : ""}
       ${filaMenu("cu-informe", "Descargar mi informe", "PDF con tu evaluación, actividad y marcas", ICO.pdf)}
       ${filaMenu("cu-exportar", "Copia de seguridad", "Archivo técnico con todos tus datos", ICO.bajar)}
+      ${filaMenu("cu-ayuda", "Ayuda y contacto", "Escribinos por cualquier duda o problema", ICO.ayuda)}
     </div>
 
+    ${conCuenta ? `<div class="menu" style="margin-top:18px">
+      ${filaMenu("cu-salir", "Cerrar sesión", Cuenta.usuario.email, ICO.salir)}
+    </div>` : ""}
+
     <button class="btn block" id="cu-volver" style="margin-top:18px">Volver a la app</button>
-    <p class="legales"><a href="/terminos/" target="_blank" rel="noopener">Términos</a> ·
-      <a href="/privacidad/" target="_blank" rel="noopener">Privacidad</a> ·
-      <a href="/arrepentimiento/" target="_blank" rel="noopener">Botón de arrepentimiento</a></p>
-    ${conCuenta ? `<button class="btn ghost block" id="cu-salir" style="margin-top:8px">Cerrar sesión</button>` : ""}
     <button class="btn ghost block peligro" id="cu-borrar" style="margin-top:8px">Borrar todo y empezar de cero</button>
     <p class="sm muted" style="margin:16px 0 0">Nivora Fit te da estimaciones y una rutina general.
-    No reemplaza a un médico, un nutricionista ni un profesor. Si algo te duele, pará y consultá.</p>`);
+    No reemplaza a un médico, un nutricionista ni un profesor. Si algo te duele, pará y consultá.</p>
+    ${pieLegal()}`);
 
   document.getElementById("cu-volver").onclick = () => cerrarSheet();
+  document.getElementById("cu-ayuda").onclick = () => {
+    location.href = "mailto:" + CONTACTO + "?subject=" + encodeURIComponent("Ayuda con Nivora Fit") +
+      "&body=" + encodeURIComponent("\n\n—\nCuenta: " + ((Cuenta.usuario && Cuenta.usuario.email) || "sin cuenta") + "\nVersión: " + VERSION_APP);
+  };
   document.getElementById("cu-foto").onclick = elegirFoto;
   document.getElementById("cu-perfil").onclick = hojaDatos;
   document.getElementById("cu-entreno").onclick = hojaEntreno;
@@ -111,12 +134,16 @@ function abrirAjustes() {
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   };
   const salir = document.getElementById("cu-salir");
-  if (salir) salir.onclick = () => { cerrarSheet(); cerrarSesion(); };
+  if (salir) salir.onclick = () => {
+    if (!confirm("¿Cerrás sesión en este teléfono? Tus datos quedan guardados en tu cuenta.")) return;
+    cerrarSheet(); cerrarSesion();
+  };
   document.getElementById("cu-borrar").onclick = () => {
     if (!confirm("Esto borra tu perfil, tus medidas y todo tu historial. ¿Seguro?")) return;
     S.perfil = null; S.medidas = []; S.cargas = {}; S.sesiones = []; S.activa = null; S.agenda = null; S.cardio = null;
     borrador = null; paso = 0;
-    lsBorrar(); guardar("Datos borrados");
+    lsBorrar(); S.updated = Date.now(); lsSet();
+    if (HAY_NUBE && Cuenta.usuario) subirEstado(true); else estadoGuardado("Datos borrados");
     cerrarSheet(); pintar();
   };
 }

@@ -217,3 +217,60 @@ grant select on public.chat_mensajes, public.pagos to authenticated;
 
 grant all on all tables in schema public to service_role;
 grant all on all sequences in schema public to service_role;
+
+-- ============================================================
+-- INTEGRIDAD DE LOS DATOS (v9)
+-- ============================================================
+
+-- Cada entrenamiento tiene un id propio: dos entrenamientos del mismo día
+-- ya no se pisan en la tabla, y se guardan también los km de las salidas.
+alter table public.sesiones add column if not exists uid text;
+alter table public.sesiones add column if not exists km numeric(7,3);
+alter table public.sesiones drop constraint if exists sesiones_usuario_id_fecha_bloque_key;
+delete from public.sesiones where uid is null;   -- la app las vuelve a subir con su id
+create unique index if not exists sesiones_usuario_uid_idx on public.sesiones (usuario_id, uid);
+
+-- Respaldo automático del perfil: antes de cada cambio se guarda la versión
+-- anterior (como mucho una cada 10 minutos, las últimas 30 por persona).
+-- Si algo sale mal, se puede recuperar desde el SQL Editor.
+create table if not exists public.perfiles_respaldo (
+  id          bigint generated always as identity primary key,
+  usuario_id  uuid not null references auth.users(id) on delete cascade,
+  datos       jsonb not null,
+  guardado    timestamptz not null default now()
+);
+create index if not exists perfiles_respaldo_idx on public.perfiles_respaldo (usuario_id, guardado desc);
+alter table public.perfiles_respaldo enable row level security;   -- sin políticas: nadie de afuera la lee
+revoke all on public.perfiles_respaldo from anon, authenticated;
+
+create or replace function public.respaldar_perfil()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if old.datos is not null and old.datos <> '{}'::jsonb and old.datos is distinct from new.datos then
+    if not exists (select 1 from public.perfiles_respaldo
+                   where usuario_id = old.id and guardado > now() - interval '10 minutes') then
+      insert into public.perfiles_respaldo (usuario_id, datos) values (old.id, old.datos);
+      delete from public.perfiles_respaldo
+       where usuario_id = old.id
+         and id not in (select id from public.perfiles_respaldo
+                         where usuario_id = old.id order by guardado desc limit 30);
+    end if;
+  end if;
+  return new;
+end $$;
+
+drop trigger if exists perfiles_respaldo_trg on public.perfiles;
+create trigger perfiles_respaldo_trg before update of datos on public.perfiles
+  for each row execute function public.respaldar_perfil();
+
+-- Freno a datos rotos o gigantes: el perfil tiene que ser un objeto y no
+-- pasar de 4 MB.
+alter table public.perfiles drop constraint if exists perfiles_datos_validos;
+alter table public.perfiles add constraint perfiles_datos_validos
+  check (datos is null or (jsonb_typeof(datos) = 'object' and pg_column_size(datos) < 4000000)) not valid;
+
+-- La memoria del chat de n8n tampoco se puede leer desde la app.
+alter table public.n8n_chat_histories enable row level security;
+revoke all on public.n8n_chat_histories from anon, authenticated;
+revoke all on public.perfiles_respaldo from anon;
+grant all on public.n8n_chat_histories, public.perfiles_respaldo to service_role;

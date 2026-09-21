@@ -45,11 +45,14 @@ function diaRelativo(iso) {
 /* ---------- guardado en el teléfono ---------- */
 const CLAVE = "nivora.v1";
 
-function snapshot() {
+/* paraNube: lo que sube al servidor no lleva ni el recorrido GPS ni la última
+   coordenada; eso queda solo en el teléfono. */
+function snapshot(paraNube) {
   return {
     perfil: S.perfil, medidas: S.medidas, cargas: S.cargas,
-    sesiones: S.sesiones.slice(-200), activa: S.activa, agenda: S.agenda, cardio: S.cardio && { ...S.cardio, ultimo: null },
-    updated: Date.now()
+    sesiones: S.sesiones.slice(-3000), activa: S.activa, agenda: S.agenda,
+    cardio: S.cardio && (paraNube ? { ...S.cardio, ultimo: null, ruta: null } : S.cardio),
+    updated: S.updated || Date.now()
   };
 }
 function restaurar(d) {
@@ -62,6 +65,64 @@ function restaurar(d) {
   S.agenda = d.agenda || null;
   S.cardio = d.cardio || null;
   S.updated = d.updated || 0;
+  asegurarIds();
+}
+
+/* ---------- integridad ----------
+   Cada entrenamiento lleva un id propio. Así, si la misma persona usa dos
+   teléfonos, los historiales se suman en vez de pisarse. A los registros
+   viejos sin id les damos uno que sale de su contenido: dos teléfonos le
+   ponen el mismo id al mismo entrenamiento. */
+function nuevoId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+}
+function claveSesion(s) {
+  return [s.fecha, s.bloque, s.min, s.series, s.km == null ? "" : s.km, s.volumen || 0].join("|");
+}
+function hashCorto(t) {
+  let h = 5381;
+  for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0;
+  return "v" + (h >>> 0).toString(36);
+}
+function asegurarIds() {
+  (S.sesiones || []).forEach(s => { if (!s.id) s.id = hashCorto(claveSesion(s)); });
+}
+
+/* Junta lo de este teléfono con lo del servidor.
+   Listas (entrenamientos, medidas): se suman, sin duplicados.
+   Cargas: por ejercicio, gana la más reciente.
+   Perfil y rutina del día: gana el lado que se tocó último.
+   Lo que está en curso en este teléfono (entrenamiento, salida) no se toca. */
+function fusionar(local, remoto) {
+  if (!remoto) return local;
+  if (!local) return remoto;
+  const nuevoGana = (remoto.updated || 0) > (local.updated || 0);
+  const base = nuevoGana ? remoto : local, otro = nuevoGana ? local : remoto;
+
+  const ses = new Map();
+  [...(otro.sesiones || []), ...(base.sesiones || [])].forEach(s => {
+    const id = s.id || hashCorto(claveSesion(s));
+    ses.set(id, { ...s, id });
+  });
+  const med = new Map();
+  [...(otro.medidas || []), ...(base.medidas || [])].forEach(m => med.set(m.fecha, m));
+
+  const cargas = { ...(otro.cargas || {}) };
+  Object.entries(base.cargas || {}).forEach(([k, c]) => {
+    const o = cargas[k];
+    if (!o || (c.fecha || "") >= (o.fecha || "")) cargas[k] = c;
+  });
+
+  return {
+    perfil: base.perfil || otro.perfil,
+    medidas: [...med.values()].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    cargas,
+    sesiones: [...ses.values()].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+    activa: local.activa || null,
+    cardio: local.cardio || null,
+    agenda: base.agenda || null,
+    updated: Math.max(local.updated || 0, remoto.updated || 0)
+  };
 }
 function lsGet() {
   try { const t = localStorage.getItem(CLAVE); return t ? JSON.parse(t) : null; } catch (e) { return null; }
