@@ -78,6 +78,9 @@ function abrirAjustes() {
     </div>
 
     <button class="btn block" id="cu-volver" style="margin-top:18px">Volver a la app</button>
+    <p class="legales"><a href="/terminos/" target="_blank" rel="noopener">Términos</a> ·
+      <a href="/privacidad/" target="_blank" rel="noopener">Privacidad</a> ·
+      <a href="/arrepentimiento/" target="_blank" rel="noopener">Botón de arrepentimiento</a></p>
     ${conCuenta ? `<button class="btn ghost block" id="cu-salir" style="margin-top:8px">Cerrar sesión</button>` : ""}
     <button class="btn ghost block peligro" id="cu-borrar" style="margin-top:8px">Borrar todo y empezar de cero</button>
     <p class="sm muted" style="margin:16px 0 0">Nivora Fit te da estimaciones y una rutina general.
@@ -287,7 +290,9 @@ async function hojaPagos() {
     <div class="exlist" id="pg-lista"><p class="vacio chico">Cargando…</p></div>
 
     ${activa ? `<button class="btn ghost block peligro" id="pg-cancelar" style="margin-top:20px">Darme de baja</button>
-      <p class="sm muted" style="margin:8px 0 0">Se cancela el débito automático. Seguís teniendo acceso hasta el final del mes que ya pagaste.</p>` : ""}`);
+      <p class="sm muted" style="margin:8px 0 0">Se cancela el débito automático. Seguís teniendo acceso hasta el final del mes que ya pagaste.</p>` : ""}
+    <p class="sm muted" style="margin:16px 0 0">¿Te suscribiste hace menos de 10 días y te arrepentiste?
+      Usá el <a href="/arrepentimiento/" target="_blank" rel="noopener">botón de arrepentimiento</a> y te devolvemos todo.</p>`);
 
   document.getElementById("volver").onclick = abrirAjustes;
   const sus = document.getElementById("pg-suscribir");

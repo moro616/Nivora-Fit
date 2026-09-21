@@ -48,7 +48,7 @@ const CLAVE = "nivora.v1";
 function snapshot() {
   return {
     perfil: S.perfil, medidas: S.medidas, cargas: S.cargas,
-    sesiones: S.sesiones.slice(-200), activa: S.activa, agenda: S.agenda, cardio: S.cardio,
+    sesiones: S.sesiones.slice(-200), activa: S.activa, agenda: S.agenda, cardio: S.cardio && { ...S.cardio, ultimo: null },
     updated: Date.now()
   };
 }

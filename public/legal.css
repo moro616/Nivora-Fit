@@ -1,0 +1,48 @@
+/* ============================================================
+   Nivora Fit — páginas legales
+   Pensadas para leerse: una columna angosta, buena interlínea,
+   índice arriba y la fecha de vigencia a la vista.
+   ============================================================ */
+:root {
+  --f-marca: "Saira", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --bg: #0B0B0C; --card: #17171A; --linea: #26262B;
+  --ink: #F7F7F8; --ink-2: #C9C9D0; --muted: #85858F;
+  color-scheme: dark;
+}
+:root[data-theme="claro"] { --bg: #FBFBFC; --card: #FFFFFF; --linea: #E4E4E8; --ink: #0B0B0C; --ink-2: #33333A; --muted: #6E6E78; color-scheme: light; }
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="oscuro"]) { --bg: #FBFBFC; --card: #FFFFFF; --linea: #E4E4E8; --ink: #0B0B0C; --ink-2: #33333A; --muted: #6E6E78; color-scheme: light; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink-2); font: 16px/1.7 var(--f-body); -webkit-font-smoothing: antialiased; }
+.barra { border-bottom: 1px solid var(--linea); }
+.barra div { max-width: 720px; margin: 0 auto; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.barra a { color: var(--ink); text-decoration: none; }
+.marca { font-family: var(--f-marca); font-weight: 600; letter-spacing: .14em; font-size: 14px; }
+.volver { font-size: 14px; color: var(--muted) !important; }
+main { max-width: 720px; margin: 0 auto; padding: 44px 20px 80px; }
+h1 { font-family: var(--f-marca); font-weight: 800; color: var(--ink); font-size: clamp(30px, 7vw, 42px); line-height: 1.1; margin: 0 0 10px; }
+.vigencia { color: var(--muted); font-size: 14px; margin: 0 0 30px; }
+.resumen { background: var(--card); border: 1px solid var(--linea); border-radius: 14px; padding: 18px 20px; margin: 0 0 34px; }
+.resumen p { margin: 0 0 8px; color: var(--ink); font-weight: 600; }
+.resumen ul { margin: 0; padding-left: 20px; }
+.resumen li + li { margin-top: 4px; }
+nav.indice { margin: 0 0 40px; font-size: 14.5px; }
+nav.indice ol { margin: 0; padding-left: 22px; columns: 2 260px; column-gap: 28px; }
+nav.indice a { color: var(--ink-2); }
+h2 { font-family: var(--f-body); color: var(--ink); font-size: 19px; font-weight: 600; margin: 40px 0 10px; scroll-margin-top: 20px; }
+p, li { max-width: 68ch; }
+strong { color: var(--ink); font-weight: 600; }
+a { color: var(--ink); }
+ul, ol { padding-left: 22px; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 10px 0 0; display: block; overflow-x: auto; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--linea); }
+th { color: var(--ink); font-weight: 600; white-space: nowrap; }
+.aaip { border-left: 3px solid var(--ink); padding: 4px 0 4px 16px; font-size: 14.5px; }
+.boton { display: inline-block; background: var(--ink); color: var(--bg) !important; text-decoration: none; font-weight: 600;
+  padding: 14px 22px; border-radius: 12px; margin: 8px 0; }
+footer { border-top: 1px solid var(--linea); color: var(--muted); font-size: 13.5px; }
+footer div { max-width: 720px; margin: 0 auto; padding: 24px 20px 40px; display: flex; flex-wrap: wrap; gap: 8px 20px; }
+footer a { color: var(--muted); }

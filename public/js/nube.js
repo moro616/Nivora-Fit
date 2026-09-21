@@ -207,13 +207,21 @@ function mostrarAcceso(modo) {
       <div class="field"><label for="ac-pass">Contraseña</label>
         <input id="ac-pass" type="password" autocomplete="${registro ? "new-password" : "current-password"}"
           placeholder="${registro ? "Al menos 8 caracteres" : "Tu contraseña"}"></div>
+      ${registro ? `<label class="consentimiento" style="margin:0 0 12px">
+        <input type="checkbox" id="ac-acepto">
+        <span>Acepto los <a href="/terminos/" target="_blank" rel="noopener">términos y condiciones</a> y la
+        <a href="/privacidad/" target="_blank" rel="noopener">política de privacidad</a>, y doy mi consentimiento
+        para que se usen mis datos de salud (peso, medidas y molestias) para armar mi entrenamiento.</span>
+      </label>` : ""}
       <p class="sm" id="ac-error" style="color:var(--bad);margin:-4px 0 12px;min-height:18px"></p>
       <button class="btn block" id="ac-enviar">${registro ? "Crear cuenta y empezar" : "Entrar"}</button>
       <button class="btn ghost block" id="ac-cambiar" style="margin-top:8px">
         ${registro ? "Ya tengo cuenta" : "Todavía no tengo cuenta"}</button>
       ${registro ? "" : `<button class="btn ghost block" id="ac-olvide" style="margin-top:8px">Olvidé mi contraseña</button>`}
-      <p class="sm muted" style="margin:14px 0 0">Al crear tu cuenta aceptás los términos y la política de privacidad.
-        Tus datos son tuyos: podés descargarlos o borrarlos cuando quieras.</p>
+      ${registro ? "" : `<p class="sm muted" style="margin:14px 0 0">
+        <a href="/terminos/" target="_blank" rel="noopener">Términos</a> ·
+        <a href="/privacidad/" target="_blank" rel="noopener">Privacidad</a></p>`}
+
     </div>`;
 
   const err = m => { document.getElementById("ac-error").textContent = m || ""; };
@@ -224,6 +232,7 @@ function mostrarAcceso(modo) {
     const pass = document.getElementById("ac-pass").value;
     if (!email || !pass) return err("Completá correo y contraseña.");
     if (registro && pass.length < 8) return err("La contraseña necesita al menos 8 caracteres.");
+    if (registro && !document.getElementById("ac-acepto").checked) return err("Para crear la cuenta tenés que aceptar los términos y la política de privacidad.");
     boton.disabled = true; boton.textContent = "Un segundo..."; err("");
     try {
       const r = registro
