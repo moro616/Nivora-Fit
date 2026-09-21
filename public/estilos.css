@@ -681,3 +681,7 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .recibo dl { margin: 0; text-align: left; }
 .recibo dl div { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px dashed var(--linea-2); font-size: 13px; }
 .recibo dt { color: var(--muted); } .recibo dd { margin: 0; text-align: right; word-break: break-all; }
+
+/* La ✕ siempre a mano, aunque la hoja sea larga. */
+.sheet-head { position: sticky; top: -18px; z-index: 2; background: var(--bg-2);
+  margin: -18px calc(var(--gutter) * -1) 10px; padding: 16px var(--gutter) 10px; }

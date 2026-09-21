@@ -20,18 +20,36 @@ function estadoGuardado(texto) {
   if (c) c.textContent = texto;
 }
 
+/* Las hojas se cierran con la ✕, tocando afuera o con el botón "atrás"
+   del teléfono: abrir una deja una marca en el historial, así "atrás"
+   cierra la hoja en vez de sacarte de la app. */
+let volviendo = false;
 function abrirSheet(html) {
   const w = document.getElementById("sheet-wrap");
+  if (!w.classList.contains("abierto")) {
+    try { history.pushState({ hoja: 1 }, ""); } catch (e) { /* nada */ }
+  }
   document.getElementById("sheet-body").innerHTML = html;
   w.classList.add("abierto");
+  w.querySelector(".sheet").scrollTop = 0;
   document.body.style.overflow = "hidden";
   const x = document.getElementById("sheet-close");
-  if (x) x.onclick = cerrarSheet;
+  if (x) x.onclick = () => cerrarSheet();
 }
-function cerrarSheet() {
-  document.getElementById("sheet-wrap").classList.remove("abierto");
+function cerrarSheet(desdeHistorial) {
+  const w = document.getElementById("sheet-wrap");
+  const estaba = w.classList.contains("abierto");
+  w.classList.remove("abierto");
   document.body.style.overflow = "";
+  if (estaba && !desdeHistorial && history.state && history.state.hoja) {
+    volviendo = true;
+    history.back();
+  }
 }
+window.addEventListener("popstate", () => {
+  if (volviendo) { volviendo = false; return; }
+  if (document.getElementById("sheet-wrap").classList.contains("abierto")) cerrarSheet(true);
+});
 
 /* El tema es una preferencia del teléfono, no de la cuenta: se guarda aparte
    y lo comparten la landing y la app (ver instalar.js). */
@@ -688,7 +706,7 @@ function terminarSesion() {
       ? `<div class="ojo bien"><b>La próxima subís peso</b><p>${esc(subieron.join(", "))}. Completaste el rango, así que toca sumar un escalón.</p></div>`
       : `<p class="cuerpo">Quedó registrado. Cuando completes todas las series en el tope de repeticiones, la app te va a subir el peso sola.</p>`}
     <button class="btn block" id="cerrar-resumen">Listo</button>`);
-  document.getElementById("cerrar-resumen").onclick = cerrarSheet;
+  document.getElementById("cerrar-resumen").onclick = () => cerrarSheet();
 }
 
 /* ============================================================
@@ -964,5 +982,5 @@ function pasosIOS() {
       <li>Tocá <b>Agregar</b> arriba a la derecha. Listo.</li>
     </ol>
     <button class="btn block" id="ios-ok">Entendido</button>`);
-  document.getElementById("ios-ok").onclick = cerrarSheet;
+  document.getElementById("ios-ok").onclick = () => cerrarSheet();
 }

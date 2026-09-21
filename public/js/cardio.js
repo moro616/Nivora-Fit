@@ -231,7 +231,7 @@ function resumenCardio(tipo, min, km, ms) {
     ${km > 0.05 ? `<p class="cuerpo">Ritmo promedio de <b>${ritmoTexto(ms, km * 1000)} min/km</b>.${
       km >= mejor && S.sesiones.filter(x => x.tipo === tipo).length > 1 ? " Es tu salida más larga hasta ahora." : ""}</p>` : ""}
     <button class="btn block" id="cerrar-resumen">Listo</button>`);
-  document.getElementById("cerrar-resumen").onclick = cerrarSheet;
+  document.getElementById("cerrar-resumen").onclick = () => cerrarSheet();
 }
 
 function cardioManual() {

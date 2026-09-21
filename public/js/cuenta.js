@@ -74,11 +74,13 @@ function abrirAjustes() {
       ${filaMenu("cu-exportar", "Descargar mis datos", "Todo tu historial en un archivo", ICO.bajar)}
     </div>
 
-    ${conCuenta ? `<button class="btn ghost block" id="cu-salir" style="margin-top:18px">Cerrar sesión</button>` : ""}
+    <button class="btn block" id="cu-volver" style="margin-top:18px">Volver a la app</button>
+    ${conCuenta ? `<button class="btn ghost block" id="cu-salir" style="margin-top:8px">Cerrar sesión</button>` : ""}
     <button class="btn ghost block peligro" id="cu-borrar" style="margin-top:8px">Borrar todo y empezar de cero</button>
     <p class="sm muted" style="margin:16px 0 0">Nivora Fit te da estimaciones y una rutina general.
     No reemplaza a un médico, un nutricionista ni un profesor. Si algo te duele, pará y consultá.</p>`);
 
+  document.getElementById("cu-volver").onclick = () => cerrarSheet();
   document.getElementById("cu-foto").onclick = elegirFoto;
   document.getElementById("cu-perfil").onclick = hojaDatos;
   document.getElementById("cu-entreno").onclick = hojaEntreno;

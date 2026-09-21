@@ -11,7 +11,7 @@
    Al publicar cambios grandes, subí VERSION: se borra lo viejo.
    ============================================================ */
 
-const VERSION = "nivora-v3";
+const VERSION = "nivora-v4";
 const PACIENCIA = 3500;
 
 /* Lo mínimo para que la app arranque sin conexión. */

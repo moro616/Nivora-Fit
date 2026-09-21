@@ -88,7 +88,7 @@ function conectarTabs() {
   });
   document.getElementById("btn-avatar").onclick = abrirAjustes;
   document.getElementById("btn-chat").onclick = abrirEntrenador;
-  document.getElementById("scrim").onclick = cerrarSheet;
+  document.getElementById("scrim").onclick = () => cerrarSheet();
   document.addEventListener("keydown", e => { if (e.key === "Escape") cerrarSheet(); });
 }
 
