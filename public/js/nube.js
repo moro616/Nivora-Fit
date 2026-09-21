@@ -48,6 +48,11 @@ async function iniciarApp() {
   Cuenta.usuario = { id: session.user.id, email: session.user.email };
   await cargarPerfil();
 
+  /* El perfil lo crea la base apenas te registrás, pero puede tardar un
+     instante. Antes de mostrarle nada a la persona, reintentamos. */
+  if (!Cuenta.perfil) await esperarPerfil();
+
+  if (!Cuenta.perfil) { mostrarPreparando(); return; }
   if (!Cuenta.acceso.permitido) { mostrarMuroPago(); return; }
 
   // el servidor manda: si tiene datos más nuevos que los locales, gana el servidor
@@ -115,6 +120,49 @@ async function sincronizarTablas() {
   });
   if (sesiones.length) await SB.from("sesiones").upsert(sesiones, { onConflict: "usuario_id,fecha,bloque" });
   if (medidas.length) await SB.from("medidas").upsert(medidas, { onConflict: "usuario_id,fecha" });
+}
+
+/* Reintenta un rato: tres vueltas, un segundo y medio entre cada una. */
+async function esperarPerfil(vueltas) {
+  for (let i = 0; i < (vueltas || 3); i++) {
+    await new Promise(r => setTimeout(r, 1500));
+    await cargarPerfil();
+    if (Cuenta.perfil) return Cuenta.perfil;
+  }
+  return null;
+}
+
+/* ---------- la cuenta existe pero todavía no tiene perfil ----------
+   No es que se venció una prueba: es que algo no terminó de crearse.
+   Decirle "se terminó tu prueba gratis" a alguien que se registró recién
+   es la peor manera de recibirlo. */
+function mostrarPreparando() {
+  ocultarApp();
+  document.getElementById("v-acceso").hidden = true;
+  const v = document.getElementById("v-muro");
+  v.hidden = false;
+  document.getElementById("who").innerHTML =
+    `<b>${CONFIG.APP_NOMBRE}</b><small>${Cuenta.usuario ? Cuenta.usuario.email : ""}</small>`;
+  document.getElementById("chip").textContent = "Preparando";
+  v.innerHTML = `
+    <div class="card pad">
+      <p class="eyebrow">Un momento</p>
+      <h2 style="font-size:25px;font-weight:800;margin:6px 0 8px">Estamos preparando tu cuenta</h2>
+      <p class="sm muted" style="margin:0 0 18px">Tu cuenta quedó creada, pero todavía estamos
+      terminando de armar tu perfil. Probá de nuevo en unos segundos; si sigue igual,
+      escribinos y lo resolvemos enseguida.</p>
+      <button class="btn block" id="pr-reintentar">Reintentar</button>
+      <button class="btn ghost block" id="pr-salir" style="margin-top:8px">Cerrar sesión</button>
+    </div>`;
+  const b = document.getElementById("pr-reintentar");
+  b.onclick = async () => {
+    b.disabled = true; b.textContent = "Probando...";
+    await esperarPerfil(2);
+    b.disabled = false; b.textContent = "Reintentar";
+    if (Cuenta.perfil) { ocultarPantallasDeCuenta(); await iniciarApp(); }
+    else toast("Todavía no está lista. Esperá unos segundos más.");
+  };
+  document.getElementById("pr-salir").onclick = cerrarSesion;
 }
 
 /* ---------- pantalla de acceso ---------- */
@@ -216,6 +264,7 @@ function mostrarMuroPago() {
   const v = document.getElementById("v-muro");
   v.hidden = false;
   const a = Cuenta.acceso;
+  if (a.motivo === "sin-perfil") return mostrarPreparando();
   const titulo = a.motivo === "cancelada" ? "Tu suscripción está cancelada" : "Se terminó tu prueba gratis";
   const bajada = a.motivo === "cancelada"
     ? "Podés volver cuando quieras: tus datos siguen guardados tal cual los dejaste."
