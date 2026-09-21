@@ -101,13 +101,18 @@ async function enviarMensaje() {
       headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
       body: JSON.stringify({ mensaje: texto })
     });
-    const j = await r.json();
-    if (!r.ok) throw new Error(j.error || "error");
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(j.error || ("http-" + r.status));
     Chat.mensajes.push({ rol: "entrenador", texto: j.respuesta, creado: new Date().toISOString() });
   } catch (e) {
     Chat.mensajes.push({
       rol: "entrenador",
-      texto: "Ahora mismo no puedo responderte. Probá de nuevo en un momento; mientras tanto, seguí con la rutina de hoy.",
+      texto: ({
+        sesion: "Tu sesión venció. Cerrá sesión desde Tu cuenta y volvé a entrar.",
+        perfil: "No encuentro tu perfil en el servidor. Probá cerrar sesión y volver a entrar.",
+        acceso: "El entrenador está disponible durante la prueba gratis o con la suscripción activa.",
+        n8n: "El entrenador no está respondiendo en este momento. Probá de nuevo en unos minutos."
+      })[e.message] || "Ahora mismo no puedo responderte (" + e.message + "). Probá de nuevo en un momento.",
       creado: new Date().toISOString()
     });
   } finally {

@@ -16,24 +16,25 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST") return json(405, { error: "método no permitido" });
 
   const usuario = await usuarioDelToken(event);
-  if (!usuario) return json(401, { error: "sesión no válida" });
+  if (!usuario) { console.log("chat: sesión no válida"); return json(401, { error: "sesion" }); }
 
   let mensaje = "";
   try { mensaje = String(JSON.parse(event.body || "{}").mensaje || "").trim(); } catch (e) {}
-  if (!mensaje) return json(400, { error: "mensaje vacío" });
+  if (!mensaje) { console.log("chat: mensaje vacío"); return json(400, { error: "vacio" }); }
   if (mensaje.length > 1500) mensaje = mensaje.slice(0, 1500);
 
   // --- ¿tiene acceso? ---
-  const { data: perfil } = await admin
-    .from("perfiles").select("datos, trial_fin, suscripcion_estado, proximo_cobro, es_admin")
+  const { data: perfil, error: errPerfil } = await admin
+    .from("perfiles").select("*")
     .eq("id", usuario.id).maybeSingle();
-  if (!perfil) return json(403, { error: "sin perfil" });
+  if (errPerfil) console.error("chat: no se pudo leer el perfil:", errPerfil.message);
+  if (!perfil) { console.log("chat: sin perfil para", usuario.email); return json(403, { error: "perfil" }); }
 
   const ahora = new Date();
   const conAcceso = perfil.es_admin || perfil.suscripcion_estado === "activa" ||
     (perfil.trial_fin && new Date(perfil.trial_fin) > ahora) ||
     (perfil.suscripcion_estado === "cancelada" && perfil.proximo_cobro && new Date(perfil.proximo_cobro) > ahora);
-  if (!conAcceso) return json(402, { error: "suscripción requerida" });
+  if (!conAcceso) { console.log("chat: sin acceso", usuario.email, perfil.suscripcion_estado); return json(402, { error: "acceso" }); }
 
   // --- tope diario, para que un usuario no se coma el presupuesto ---
   const desde = new Date(); desde.setHours(0, 0, 0, 0);
@@ -41,6 +42,7 @@ exports.handler = async (event) => {
     .select("id", { count: "exact", head: true })
     .eq("usuario_id", usuario.id).eq("rol", "usuario").gte("creado", desde.toISOString());
   if ((count || 0) >= LIMITE_POR_DIA) {
+    console.log("chat: límite diario alcanzado", usuario.email);
     return json(200, {
       respuesta: "Por hoy llegamos al límite de consultas. Mañana seguimos — mientras tanto, " +
                  "tenés toda la rutina y las fichas de cada ejercicio disponibles."
@@ -50,6 +52,8 @@ exports.handler = async (event) => {
   // --- contexto: quién es y cómo viene ---
   const contexto = await armarContexto(usuario.id, perfil);
 
+  if (!process.env.N8N_WEBHOOK_URL) { console.error("chat: falta N8N_WEBHOOK_URL"); return json(502, { error: "n8n" }); }
+  console.log("chat: llamando a n8n para", usuario.email);
   try {
     const r = await fetch(process.env.N8N_WEBHOOK_URL, {
       method: "POST",
@@ -74,7 +78,7 @@ exports.handler = async (event) => {
     return json(200, { respuesta });
   } catch (e) {
     console.error("chat:", e.message);
-    return json(502, { error: "el entrenador no está disponible ahora" });
+    return json(502, { error: "n8n", detalle: e.message });
   }
 };
 
