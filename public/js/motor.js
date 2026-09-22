@@ -151,18 +151,36 @@ function sugerirCarga(ej, perfil) {
   return Math.max(paso, Math.round(bruto / paso) * paso);
 }
 
-/* Después de una sesión: si completó todo arriba del rango, sube el peso. */
-function actualizarProgresion(item, seriesHechas, repsLogradas) {
+/* Después de una sesión, doble progresión con esfuerzo (RIR):
+   - todas las series arriba del rango y sobraban 3 o más → sube dos saltos;
+   - todas arriba del rango → sube un salto;
+   - alguna muy por debajo del rango y al fallo → baja un salto;
+   - si no, mantiene y la próxima busca más repeticiones.
+   Devuelve { kg, cambio: "sube" | "baja" | null }. */
+function actualizarProgresion(item, seriesHechas, repsLogradas, detalle) {
   if (!S.cargas) S.cargas = {};
   const ej = porId(item.id);
   if (!ej) return null;
   const previo = S.cargas[ej.id] || {};
-  const completo = seriesHechas >= item.series && repsLogradas >= item.reps[1];
-  let kg = item.kg;
-  let subio = false;
-  if (completo && ej.salto > 0) { kg = item.kg + ej.salto; subio = true; }
-  S.cargas[ej.id] = { kg, reps: repsLogradas, fecha: hoyISO(), racha: completo ? (previo.racha || 0) + 1 : 0 };
-  return subio ? kg : null;
+  const sets = (detalle || []).filter(Boolean);
+  const minReps = sets.length ? Math.min(...sets.map(s => s.reps)) : repsLogradas;
+  const conRir = sets.filter(s => s.rir != null);
+  const rirProm = conRir.length ? conRir.reduce((a, s) => a + s.rir, 0) / conRir.length : null;
+  const alFallo = conRir.some(s => s.rir === 0);
+  const completo = seriesHechas >= item.series && minReps >= item.reps[1];
+  const salto = ej.salto || 0;
+
+  let kg = item.kg, cambio = null;
+  if (salto > 0 && !item.porTiempo) {
+    if (completo) { kg = item.kg + salto * (rirProm != null && rirProm >= 3 ? 2 : 1); cambio = "sube"; }
+    else if (minReps < item.reps[0] - 2 && alFallo && item.kg - salto >= salto) { kg = item.kg - salto; cambio = "baja"; }
+  }
+  S.cargas[ej.id] = {
+    kg, reps: repsLogradas, fecha: hoyISO(),
+    racha: cambio === "sube" ? (previo.racha || 0) + 1 : 0,
+    ultima: { fecha: hoyISO(), series: sets.map(s => ({ reps: s.reps, kg: s.kg || 0, rir: s.rir == null ? null : s.rir })) }
+  };
+  return cambio ? { kg, cambio } : null;
 }
 
 /* ---------- armar la rutina del día ---------- */

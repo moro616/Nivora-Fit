@@ -837,3 +837,38 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .adm-kpi.grande b { font-size: 34px; }
 .adm-kpi small { font-size: 11.5px; color: var(--muted); }
 .adm-estado { font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+
+/* ============================================================
+   v15 — herramientas de la sesión
+   ============================================================ */
+.ultima-vez { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.ultima-vez span { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
+.ultima-vez em { font-style: normal; color: var(--muted); margin-left: 4px; }
+.calentar { margin-top: 10px; border: 1px dashed var(--linea-2); border-radius: 12px; padding: 0 12px; }
+.calentar summary { cursor: pointer; padding: 10px 0; font-size: 13px; color: var(--ink-2); list-style: none; }
+.calentar summary::-webkit-details-marker { display: none; }
+.calentar summary::before { content: "+"; display: inline-block; width: 16px; color: var(--muted); }
+.calentar[open] summary::before { content: "−"; }
+.calentar p { margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.calentar p b { font-family: var(--f-num); }
+.calentar p span { color: var(--muted); }
+.calentar small { display: block; font-size: 11.5px; color: var(--muted); padding: 6px 0 10px; }
+.herrs { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.herr { border: 1px solid var(--linea); background: transparent; color: var(--muted); border-radius: 999px;
+  padding: 6px 12px; font: 500 12px var(--f-body); cursor: pointer; }
+.herr:active { background: var(--card-2); }
+.nota-ej { margin: 10px 0 0; padding: 8px 12px; border-left: 2px solid var(--ink); background: var(--card-2);
+  border-radius: 0 10px 10px 0; font-size: 13px; color: var(--ink-2); }
+.segmento.rir button { font-size: 12.5px; padding: 9px 4px; }
+.barra-dibujo { display: flex; align-items: center; justify-content: center; gap: 3px; height: 100px; }
+.bd-barra { width: 70px; height: 8px; background: var(--muted); border-radius: 3px; }
+.bd-disco { width: 22px; display: grid; place-items: center; background: var(--ink); color: var(--bg); border-radius: 4px;
+  font: 600 9px var(--f-num); writing-mode: vertical-rl; }
+.musica { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px; margin: 12px 0 0; padding: 12px 14px;
+  border-radius: var(--r); background: var(--card); border: 1px solid var(--linea); }
+.musica-ico svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; }
+.musica-txt { flex: 1; min-width: 0; }
+.musica-txt b { display: block; font-size: 13.5px; }
+.musica-txt small { display: block; font-size: 11.5px; color: var(--muted); }
+.musica-chips { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
+.musica-chips a { text-decoration: none; }

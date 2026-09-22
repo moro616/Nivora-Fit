@@ -211,6 +211,7 @@ function pintarPreparando(v, c, T) {
       <div class="cardio-cuenta" id="cv-cuenta" hidden>3</div>
     </div>
     <div class="mapa-vivo" id="cv-mapa" aria-label="Tu ubicación"></div>
+    ${tarjetaMusica(c.tipo === "correr" ? "correr" : "cardio")}
     <button class="btn block grande" id="cv-largar" style="margin-top:14px">Empezar</button>
     <button class="btn ghost block" id="cv-cancelar" style="margin-top:8px">Cancelar</button>
     <p class="sm muted" style="margin:14px 2px 0">Esperá a que diga <b>GPS con buena señal</b> para que la distancia sea precisa.

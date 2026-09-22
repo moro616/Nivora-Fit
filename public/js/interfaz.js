@@ -427,6 +427,7 @@ function pintarSesion(v) {
       </ol>
       <button class="linkbtn" id="guia-ok">Entendido</button>
     </div>`}
+    ${tarjetaMusica("fuerza")}
     <div class="sesion">${a.plan.map((it, i) => tarjetaSesion(it, i)).join("")}</div>
     <button class="btn block" id="terminar" style="margin-top:18px">Terminar entrenamiento</button>
     <button class="btn ghost block" id="cancelar" style="margin-top:8px">Cancelar</button>
@@ -470,6 +471,8 @@ function tarjetaSesion(it, i) {
       <button class="exver" data-ficha="${it.id}">cómo se hace</button>
     </div>
     <p class="plan-hoy">Hacé ${plan}</p>
+    ${textoUltimaVez(it)}
+    ${hechas ? "" : bloqueCalentamiento(it)}
     ${it.kg ? `<div class="peso">
       <span class="peso-lbl">Peso</span>
       <button class="pbtn" data-menos="${i}" aria-label="Bajar peso">−</button>
@@ -491,6 +494,7 @@ function tarjetaSesion(it, i) {
       <span class="crono-ico" aria-hidden="true"></span>
       <span class="crono-txt" id="crono-${i}">${cronoActivo && cronoActivo.i === i ? "Parar · " + fmtSeg(cronoSeg()) : "Cronometrar la serie " + (proxima + 1)}</span>
     </button>`}
+    ${herramientasTarjeta(it, i, hechas)}
   </div>`;
 }
 
@@ -506,6 +510,7 @@ function conectarTarjeta(it, i) {
   if (mas) mas.onclick = () => { it.kg = it.kg + paso; document.getElementById("kg-" + i).textContent = redondear(it.kg, 1); guardar(); };
   const cr = document.querySelector(`[data-crono="${i}"]`);
   if (cr) cr.onclick = () => alternarCrono(it, i);
+  conectarHerramientas(it, i);
 }
 
 /* ---------- cronómetro de cada serie ----------
@@ -560,6 +565,7 @@ function registrarSerie(it, i, s, seg) {
   const anterior = arr.filter(Boolean).slice(-1)[0];
   let reps = anterior ? anterior.reps : it.reps[1];
   let kg = it.kg || 0;
+  let rir = anterior && anterior.rir != null ? anterior.rir : 2;
 
   abrirSheet(`
     <div class="sheet-head"><h3>${esc(it.nombre)}</h3>
@@ -573,6 +579,11 @@ function registrarSerie(it, i, s, seg) {
     </div>
     <div class="field" style="margin-top:10px"><label for="rep-otro">Otro número</label>
       <input id="rep-otro" type="number" inputmode="numeric" placeholder="${reps}"></div>
+
+    ${it.porTiempo ? "" : `<label class="lbl" style="margin-top:14px">¿Cuántas más te salían?</label>
+    <div class="segmento rir" id="rir">${[[3, "3 o más"], [2, "2"], [1, "1"], [0, "Ninguna"]].map(([v, t]) =>
+      `<button type="button" class="${v === rir ? "activo" : ""}" data-rir="${v}">${t}</button>`).join("")}</div>
+    <p class="sm muted" style="margin:6px 0 12px">Lo ideal es terminar cada serie sintiendo que te quedaban 1 o 2.</p>`}
 
     ${it.kg || kg ? `<label class="lbl">¿Con cuánto peso?</label>
     <div class="peso-sheet">
@@ -590,8 +601,11 @@ function registrarSerie(it, i, s, seg) {
   const consejo = () => {
     const c = document.getElementById("sk-consejo");
     if (!c) return;
-    const txt = reps > it.reps[1] ? `Te sobró: la próxima serie probá con ${redondear(kg + salto, 1)} kg.`
-      : reps < it.reps[0] ? (kg > salto ? `Te costó: bajá a ${redondear(kg - salto, 1)} kg en la próxima.` : "Te costó: descansá un poco más antes de la próxima.")
+    const txt = it.porTiempo ? (reps > it.reps[1] ? "Te sobró tiempo: la próxima vez podés hacerlo más difícil." : "Bien. Mantené la postura hasta el final.")
+      : (reps >= it.reps[1] && rir >= 3) ? `Te sobró mucho: la próxima serie probá con ${redondear(kg + salto * 2, 1)} kg.`
+      : (reps > it.reps[1] || (reps >= it.reps[1] && rir >= 2)) ? `Te sobró: la próxima serie probá con ${redondear(kg + salto, 1)} kg.`
+      : (reps < it.reps[0] && rir === 0) ? (kg > salto ? `Llegaste al fallo antes de tiempo: bajá a ${redondear(kg - salto, 1)} kg en la próxima.` : "Te costó: descansá un poco más antes de la próxima.")
+      : reps < it.reps[0] ? "Te quedaste corto: descansá un poco más y mantené el peso."
       : "Justo en el rango. Mantené este peso.";
     c.innerHTML = `<b>Para la próxima</b><p>${esc(txt)}</p>`;
   };
@@ -605,6 +619,11 @@ function registrarSerie(it, i, s, seg) {
     consejo();
   });
   document.getElementById("rep-otro").oninput = e => { const n = num(e.target.value); if (n) { reps = Math.round(n); consejo(); } };
+  document.querySelectorAll("#rir [data-rir]").forEach(b => b.onclick = () => {
+    rir = Number(b.dataset.rir);
+    document.querySelectorAll("#rir [data-rir]").forEach(o => o.classList.toggle("activo", o === b));
+    consejo();
+  });
   const m = document.getElementById("sk-menos"), p = document.getElementById("sk-mas");
   if (m) m.onclick = () => { kg = Math.max(0, kg - salto); pintarKg(); };
   if (p) p.onclick = () => { kg += salto; pintarKg(); };
@@ -613,7 +632,7 @@ function registrarSerie(it, i, s, seg) {
   });
 
   document.getElementById("rep-guardar").onclick = () => {
-    arr[s] = { reps: Math.max(1, reps), kg, seg: seg || null };
+    arr[s] = { reps: Math.max(1, reps), kg, seg: seg || null, rir: it.porTiempo ? null : rir };
     if (kg !== it.kg) it.kg = kg;       /* el peso que usó queda para las series que siguen */
     guardar();
     cerrarSheet();
@@ -692,13 +711,14 @@ function terminarSesion() {
   S.sesiones.push({ id: nuevoId(), fecha: a.fecha, bloque: a.bloque, nombre: a.nombre, tipo: "gimnasio", series, min, kcal, volumen, grupos });
 
   /* Progresión: quien completó todo arriba del rango, la próxima sube. */
-  const subieron = [];
+  const subieron = [], bajaron = [];
   a.plan.forEach(it => {
     const arr = (a.hechos[it.id] || []).filter(Boolean);
     if (!arr.length) return;
     const mejor = Math.max(...arr.map(s => s.reps));
-    const nuevo = actualizarProgresion({ ...it, kg: arr[arr.length - 1].kg || it.kg }, arr.length, mejor);
-    if (nuevo) subieron.push(it.nombre);
+    const r = actualizarProgresion({ ...it, kg: arr[arr.length - 1].kg || it.kg }, arr.length, mejor, arr);
+    if (r && r.cambio === "sube") subieron.push(it.nombre);
+    if (r && r.cambio === "baja") bajaron.push(it.nombre);
   });
 
   S.activa = null;
@@ -719,6 +739,7 @@ function terminarSesion() {
     ${subieron.length
       ? `<div class="ojo bien"><b>La próxima subís peso</b><p>${esc(subieron.join(", "))}. Completaste el rango, así que toca sumar un escalón.</p></div>`
       : `<p class="cuerpo">Quedó registrado. Cuando completes todas las series en el tope de repeticiones, la app te va a subir el peso sola.</p>`}
+    ${bajaron.length ? `<div class="ojo"><b>La próxima bajamos un poco</b><p>${esc(bajaron.join(", "))}. Llegaste al fallo lejos del rango: con un escalón menos vas a hacer mejores repeticiones y progresar más rápido.</p></div>` : ""}
     <button class="btn block" id="cerrar-resumen">Listo</button>`);
   document.getElementById("cerrar-resumen").onclick = () => cerrarSheet();
 }
