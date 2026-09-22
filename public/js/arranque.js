@@ -135,8 +135,11 @@ function lsBorrar() {
 }
 
 /* ---------- pestañas ---------- */
-function irA(vista) {
+function irA(vista, desdeHistorial) {
+  const antes = typeof enNivelUno === "function" ? enNivelUno() : false;
+  if (typeof Entrenar !== "undefined") Entrenar.sub = null;
   S.vista = vista;
+  if (!desdeHistorial && typeof ajustarHistorial === "function") ajustarHistorial(antes);
   document.querySelectorAll("#tabbar [role=tab]").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.tab === vista)));
   pintar();

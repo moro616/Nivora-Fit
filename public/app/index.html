@@ -42,6 +42,7 @@
     <div class="chip" id="chip">—</div>
   </header>
 
+  <div class="barra-volver" id="barra-volver" hidden></div>
   <section class="view" id="v-acceso" hidden></section>
   <section class="view" id="v-muro" hidden></section>
   <section class="view" id="v-setup" hidden></section>
@@ -59,7 +60,7 @@
 
 <nav class="tabbar" id="tabbar" role="tablist" hidden>
   <button role="tab" data-tab="hoy" aria-selected="true">
-    <svg viewBox="0 0 24 24"><path d="M6.5 9v6M17.5 9v6M4 10.5v3M20 10.5v3M6.5 12h11"/></svg>Hoy</button>
+    <svg viewBox="0 0 24 24"><path d="M6.5 9v6M17.5 9v6M4 10.5v3M20 10.5v3M6.5 12h11"/></svg>Entrenar</button>
   <button role="tab" data-tab="agenda" aria-selected="false">
     <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agenda</button>
   <button role="tab" data-tab="ejercicios" aria-selected="false">
@@ -84,6 +85,7 @@
   SUPABASE_URL: "", SUPABASE_ANON_KEY: "", PRECIO_MENSUAL: 10000, MONEDA: "ARS", DIAS_PRUEBA: 7 };</script>
 <script src="/config.js" onerror="void 0"></script>
 <script src="/instalar.js"></script>
+<script src="/pixel.js"></script>
 <script src="/js/dibujos.js"></script>
 <script src="/js/ejercicios.js"></script>
 <script src="/js/cuerpo.js"></script>

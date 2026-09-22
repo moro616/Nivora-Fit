@@ -305,6 +305,11 @@ function mostrarAcceso(modo) {
         ? await SB.auth.signUp({ email, password: pass, options: { emailRedirectTo: urlDeLaApp() } })
         : await SB.auth.signInWithPassword({ email, password: pass });
       if (r.error) throw r.error;
+      if (registro && window.Pixel) {
+        Pixel.evento("CompleteRegistration", { content_name: "Cuenta Nivora Fit" });
+        Pixel.evento("StartTrial", { value: 0, currency: CONFIG.MONEDA || "ARS",
+          predicted_ltv: Number(CONFIG.PRECIO_MENSUAL) || 0 });
+      }
       if (registro && !r.data.session) {
         v.innerHTML = `<div class="card pad">
           <p class="eyebrow">Falta un paso</p>
@@ -421,7 +426,11 @@ async function revisarVueltaDePago() {
   history.replaceState({}, "", location.pathname);
   for (let i = 0; i < 6; i++) {
     await cargarPerfil();
-    if (Cuenta.acceso && Cuenta.acceso.permitido) return true;
+    if (Cuenta.acceso && Cuenta.acceso.permitido) {
+      if (window.Pixel) Pixel.evento("Subscribe", { value: Number(CONFIG.PRECIO_MENSUAL) || 0,
+        currency: CONFIG.MONEDA || "ARS", predicted_ltv: (Number(CONFIG.PRECIO_MENSUAL) || 0) * 6 });
+      return true;
+    }
     await new Promise(r => setTimeout(r, 2500));
   }
   return false;

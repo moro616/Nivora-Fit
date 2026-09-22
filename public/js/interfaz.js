@@ -55,7 +55,12 @@ function cerrarSheet(desdeHistorial) {
 }
 window.addEventListener("popstate", () => {
   if (volviendo) { volviendo = false; return; }
-  if (document.getElementById("sheet-wrap").classList.contains("abierto")) cerrarSheet(true);
+  if (document.getElementById("sheet-wrap").classList.contains("abierto")) return cerrarSheet(true);
+  /* "Atrás" desde el detalle o desde otra pestaña vuelve al menú de Entrenar. */
+  if (typeof Entrenar !== "undefined" && S.perfil) {
+    Entrenar.sub = null;
+    if (S.vista !== "hoy") irA("hoy", true); else pintar();
+  }
 });
 
 /* El tema es una preferencia del teléfono, no de la cuenta: se guarda aparte
@@ -86,6 +91,7 @@ function pintarCabecera() {
 /* ---------- el director de orquesta ---------- */
 function pintar() {
   pintarCabecera();
+  pintarBarraVolver();
   const vistas = ["setup", "hoy", "agenda", "ejercicios", "cuerpo", "progreso"];
   const activa = S.perfil ? S.vista : "setup";
   vistas.forEach(v => {
@@ -273,33 +279,188 @@ function rutinaDeHoy() {
   return S.agenda;
 }
 
+/* Navegación en dos niveles. Nivel 0: el menú de Entrenar. Nivel 1: el
+   detalle de la rutina o cualquier otra pestaña. Pasar al nivel 1 deja una
+   marca en el historial, así el botón "atrás" del teléfono vuelve al menú
+   en vez de cerrar la app. */
+const Entrenar = { sub: null };
+
+function enNivelUno() {
+  return !!(S.perfil && (Entrenar.sub || (S.vista && S.vista !== "hoy")));
+}
+function ajustarHistorial(antes) {
+  const ahora = enNivelUno();
+  if (!antes && ahora) {
+    try { history.pushState({ nivel: 1 }, ""); } catch (e) { /* nada */ }
+  } else if (antes && !ahora && history.state && history.state.nivel) {
+    volviendo = true;
+    history.back();
+  }
+}
+
+function abrirDetalleRutina() {
+  const antes = enNivelUno();
+  Entrenar.sub = "rutina";
+  ajustarHistorial(antes);
+  pintar();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+
+function cerrarDetalleRutina() {
+  if (!Entrenar.sub) return;
+  const antes = enNivelUno();
+  Entrenar.sub = null;
+  ajustarHistorial(antes);
+}
+
+/* El botón "‹" de arriba: siempre vuelve a Entrenar (o al entrenamiento en curso). */
+const TITULOS = { agenda: "Agenda", ejercicios: "Ejercicios", cuerpo: "Tu cuerpo", progreso: "Progreso" };
+function pintarBarraVolver() {
+  const b = document.getElementById("barra-volver");
+  if (!b) return;
+  const titulo = !S.perfil ? "" : S.vista === "hoy" ? (Entrenar.sub && !S.activa && !S.cardio ? "Rutina de hoy" : "")
+    : TITULOS[S.vista] || "";
+  if (!titulo) { b.hidden = true; b.innerHTML = ""; return; }
+  const destino = S.activa ? "Volver al entrenamiento" : S.cardio ? "Volver a la salida" : "Entrenar";
+  b.hidden = false;
+  b.innerHTML = `<button class="volver" id="btn-volver" aria-label="Volver a ${esc(destino)}">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>${esc(destino)}</span></button>
+    <b class="barra-titulo">${esc(titulo)}</b>`;
+  document.getElementById("btn-volver").onclick = volverAEntrenar;
+}
+function volverAEntrenar() {
+  if (S.vista !== "hoy") return irA("hoy");
+  cerrarDetalleRutina();
+  pintar();
+  window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+}
+
 function vistaHoy() {
   const v = document.getElementById("v-hoy");
   const r = rutinaDeHoy();
 
   if (S.cardio) return pintarCardio(v);
   if (S.activa) return pintarSesion(v);
+  if (Entrenar.sub === "rutina") return detalleRutina(v, r);
+  return menuEntrenar(v, r);
+}
 
-  const mins = duracionEstimada(r);
+function avisoUltimo() {
   const dd = diasDesdeUltima();
-  const aviso = dd == null ? "Tu primer entrenamiento."
+  return dd == null ? "Tu primer entrenamiento."
     : dd === 0 ? "Ya entrenaste hoy. Si querés hacer otro, adelante."
     : dd >= 7 ? `Hace ${dd} días que no venís. Arrancamos suave y retomamos el ritmo.`
     : `Último entrenamiento ${diaRelativo(S.sesiones[S.sesiones.length - 1].fecha)}.`;
+}
+
+function datosRutina(r) {
+  return `<div class="datos">
+    <div><b>${r.plan.length}</b><span>ejercicios</span></div>
+    <div><b>${duracionEstimada(r)}′</b><span>aprox.</span></div>
+    <div><b>${r.plan.reduce((a, i) => a + i.series, 0)}</b><span>series</span></div>
+  </div>`;
+}
+
+const ICO_ENTRENAR = {
+  musculo: `<svg viewBox="0 0 24 24"><path d="M6.5 9v6M17.5 9v6M4 10.5v3M20 10.5v3M6.5 12h11"/></svg>`,
+  reloj: `<svg viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9.5 2.5h5"/></svg>`,
+  lapiz: `<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4"/></svg>`,
+  correr: `<svg viewBox="0 0 24 24"><circle cx="15" cy="4.5" r="2"/><path d="M8 21l3.5-6 3 2.5V22M6 12l3-3.5 4 1 2.5 3.5 3 .5M11.5 15l-1.2-5"/></svg>`,
+  caminar: `<svg viewBox="0 0 24 24"><circle cx="12" cy="4.5" r="2"/><path d="M12 8v6l-2.5 7M12 14l2.5 7M8.5 11.5 12 9l3.5 2.5"/></svg>`
+};
+
+/* ---------- el menú: lo primero que se ve al abrir la app ---------- */
+function menuEntrenar(v, r) {
+  const ult = (S.sesiones || []).slice().reverse().find(s => s.km != null);
+  const ultCardio = ult ? `Última: ${redondear(ult.km, 2)} km ${diaRelativo(ult.fecha)}` : "";
+  const nombresSplit = [...new Set(splitDe(S.perfil))].map(b => BLOQUES[b].nombre).join(", ");
 
   v.innerHTML = `
     ${avisoPrueba()}
-    ${tarjetaClima()}
     <div class="hero">
       <p class="eyebrow">Hoy te toca</p>
       <h2>${esc(r.nombre)}</h2>
       <p class="sm muted" style="margin:6px 0 0">${esc(r.musculos)}</p>
       ${chipFase()}
-      <div class="datos">
-        <div><b>${r.plan.length}</b><span>ejercicios</span></div>
-        <div><b>${mins}′</b><span>aprox.</span></div>
-        <div><b>${r.plan.reduce((a, i) => a + i.series, 0)}</b><span>series</span></div>
+      ${datosRutina(r)}
+      <div class="linea-botones" style="margin-top:16px">
+        <button class="btn" id="empezar">Empezar</button>
+        <button class="btn ghost" id="ver-rutina">Ver la rutina</button>
       </div>
+    </div>
+    <p class="sm muted" style="margin:14px 2px 0">${esc(avisoUltimo())}</p>
+
+    ${accesosRapidos()}
+
+    <p class="eyebrow" style="margin:22px 2px 10px">Gimnasio</p>
+    <div class="menu">
+      ${filaMenu("otro-bloque", "Elegir qué entrenar", nombresSplit, ICO_ENTRENAR.musculo)}
+      ${filaMenu("poco-tiempo", "Rutina corta", "La de hoy, recortada a 20, 30 o 45 minutos", ICO_ENTRENAR.reloj)}
+    </div>
+
+    <p class="eyebrow" style="margin:22px 2px 10px">Al aire libre</p>
+    ${tarjetaClima()}
+    <div class="menu">
+      ${filaMenu("m-correr", "Correr", ultCardio || "Distancia, ritmo y calorías con el GPS", ICO_ENTRENAR.correr)}
+      ${filaMenu("m-caminar", "Caminar", "Distancia, ritmo y calorías con el GPS", ICO_ENTRENAR.caminar)}
+      ${filaMenu("cardio-manual", "Cargar una salida a mano", "Si ya la hiciste sin el teléfono", ICO_ENTRENAR.lapiz)}
+    </div>
+    ${tarjetaInstalar()}`;
+
+  document.getElementById("empezar").onclick = empezarSesion;
+  document.getElementById("ver-rutina").onclick = abrirDetalleRutina;
+  const vb = document.getElementById("ver-bloque");
+  if (vb) vb.onclick = hojaBloque;
+  document.getElementById("poco-tiempo").onclick = () => hojaPocoTiempo(r);
+  document.getElementById("otro-bloque").onclick = hojaOtroBloque;
+  document.getElementById("m-correr").onclick = () => empezarCardio("correr");
+  document.getElementById("m-caminar").onclick = () => empezarCardio("caminar");
+  document.getElementById("cardio-manual").onclick = cardioManual;
+  conectarAccesos();
+  conectarClima();
+  conectarAvisoPrueba();
+  conectarInstalar();
+}
+
+/* ---------- entrenador y música, a un toque ---------- */
+function chatDisponible() { return HAY_NUBE && typeof Cuenta !== "undefined" && !!Cuenta.usuario; }
+
+function accesosRapidos() {
+  return `<div class="accesos${chatDisponible() ? "" : " solo"}">
+    ${chatDisponible() ? `<button class="acceso" id="acc-chat">
+      <span class="acceso-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-8 8H7l-4 3 1.2-4.2A8 8 0 1 1 21 12z"/><path d="M9 11h6M9 14.5h4"/></svg></span>
+      <span class="acceso-txt"><b>Entrenador IA</b><small>Preguntale lo que quieras</small></span>
+    </button>` : ""}
+    <button class="acceso spotify" id="acc-musica">
+      <span class="acceso-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5"/><path d="M7.5 9.5c3-1 6.5-.7 9 .8M8 12.6c2.6-.7 5.3-.4 7.4.8M8.6 15.4c2-.5 4-.3 5.7.6"/></svg></span>
+      <span class="acceso-txt"><b>Música</b><small>Listas en Spotify</small></span>
+    </button>
+  </div>`;
+}
+
+function conectarAccesos() {
+  const c = document.getElementById("acc-chat");
+  if (c) c.onclick = abrirEntrenador;
+  const m = document.getElementById("acc-musica");
+  if (m) m.onclick = hojaMusica;
+}
+
+function hojaMusica() {
+  abrirSheet(`<div class="sheet-head"><h3>Música para entrenar</h3>
+    <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
+    <p class="sm muted" style="margin:0 0 12px">Elegí una lista: se abre en la app de Spotify.</p>
+    <div class="ops">${MUSICA.map(m => `<a class="op op-link" href="${m.url}" target="_blank" rel="noopener">
+      <b>${esc(m.nombre)}</b><small>Abrir en Spotify</small></a>`).join("")}</div>`);
+}
+
+/* ---------- el detalle de la rutina de gimnasio ---------- */
+function detalleRutina(v, r) {
+  v.innerHTML = `
+    <div class="hero">
+      <p class="eyebrow">Rutina de hoy</p>
+      <h2>${esc(r.nombre)}</h2>
+      <p class="sm muted" style="margin:6px 0 0">${esc(r.musculos)}</p>
+      ${datosRutina(r)}
       <button class="btn block" id="empezar" style="margin-top:16px">Empezar entrenamiento</button>
       <div class="linea-acciones">
         <button class="linkbtn" id="poco-tiempo">Tengo poco tiempo</button>
@@ -307,52 +468,46 @@ function vistaHoy() {
       </div>
     </div>
 
-    <p class="sm muted" style="margin:14px 2px 10px">${esc(aviso)}</p>
-
-    ${tarjetaCardio()}
-
-    <div class="card pad">
+    <div class="card pad" style="margin-top:14px">
       <p class="eyebrow">Antes de empezar</p>
       <ul class="warns">${CALENTAMIENTO.map(c => `<li>${esc(c)}</li>`).join("")}</ul>
     </div>
 
-    <p class="eyebrow" style="margin:20px 2px 10px">La rutina de hoy</p>
-    <div class="exlist">${r.plan.map((it, i) => filaEjercicio(it, i)).join("")}</div>
-    ${tarjetaInstalar()}`;
+    <p class="eyebrow" style="margin:20px 2px 10px">Los ejercicios</p>
+    <div class="exlist">${r.plan.map((it, i) => filaEjercicio(it, i)).join("")}</div>`;
 
   document.getElementById("empezar").onclick = empezarSesion;
-  const vb = document.getElementById("ver-bloque");
-  if (vb) vb.onclick = hojaBloque;
-  conectarTarjetaCardio();
-  conectarClima();
-  conectarAvisoPrueba();
-  conectarInstalar();
-  document.getElementById("poco-tiempo").onclick = () => {
-    abrirSheet(`<div class="sheet-head"><h3>¿Cuánto tiempo tenés?</h3>
-      <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
-      <div class="ops" id="ops-tiempo">
-        ${[20, 30, 45].map(m => `<button type="button" class="op" data-min="${m}"><b>${m} minutos</b></button>`).join("")}
-      </div>`);
-    document.querySelectorAll("#ops-tiempo .op").forEach(b => b.onclick = () => {
-      S.agenda = { ...recortarRutina(r, Number(b.dataset.min)), fecha: hoyISO() };
-      guardar(); cerrarSheet(); pintar();
-      toast("Rutina recortada a lo esencial.");
-    });
-  };
-  document.getElementById("otro-bloque").onclick = () => {
-    const split = splitDe(S.perfil);
-    abrirSheet(`<div class="sheet-head"><h3>¿Qué querés entrenar?</h3>
-      <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
-      <div class="ops" id="ops-bloque">
-        ${[...new Set(split)].map(b => `<button type="button" class="op" data-b="${b}">
-          <b>${esc(BLOQUES[b].nombre)}</b><small>${esc(BLOQUES[b].musculos)}</small></button>`).join("")}
-      </div>`);
-    document.querySelectorAll("#ops-bloque .op").forEach(b => b.onclick = () => {
-      S.agenda = { ...armarRutina(b.dataset.b, S.perfil), fecha: hoyISO() };
-      guardar(); cerrarSheet(); pintar();
-    });
-  };
+  document.getElementById("poco-tiempo").onclick = () => hojaPocoTiempo(r);
+  document.getElementById("otro-bloque").onclick = hojaOtroBloque;
   conectarFilas(v);
+}
+
+function hojaPocoTiempo(r) {
+  abrirSheet(`<div class="sheet-head"><h3>¿Cuánto tiempo tenés?</h3>
+    <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
+    <div class="ops" id="ops-tiempo">
+      ${[20, 30, 45].map(m => `<button type="button" class="op" data-min="${m}"><b>${m} minutos</b></button>`).join("")}
+    </div>`);
+  document.querySelectorAll("#ops-tiempo .op").forEach(b => b.onclick = () => {
+    S.agenda = { ...recortarRutina(r, Number(b.dataset.min)), fecha: hoyISO() };
+    guardar(); cerrarSheet(); pintar();
+    toast("Rutina recortada a lo esencial.");
+  });
+}
+
+function hojaOtroBloque() {
+  const split = splitDe(S.perfil);
+  abrirSheet(`<div class="sheet-head"><h3>¿Qué querés entrenar?</h3>
+    <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button></div>
+    <div class="ops" id="ops-bloque">
+      ${[...new Set(split)].map(b => `<button type="button" class="op" data-b="${b}">
+        <b>${esc(BLOQUES[b].nombre)}</b><small>${esc(BLOQUES[b].musculos)}</small></button>`).join("")}
+    </div>`);
+  document.querySelectorAll("#ops-bloque .op").forEach(b => b.onclick = () => {
+    S.agenda = { ...armarRutina(b.dataset.b, S.perfil), fecha: hoyISO() };
+    guardar(); cerrarSheet(); pintar();
+    toast("Listo, cambiamos la rutina de hoy.");
+  });
 }
 
 function filaEjercicio(it, i, hechas) {
@@ -400,6 +555,7 @@ const EQUIPO_NOMBRE = e => ({
    SESIÓN EN CURSO
    ============================================================ */
 function empezarSesion() {
+  cerrarDetalleRutina();
   const r = rutinaDeHoy();
   S.activa = { ...r, fecha: hoyISO(), inicio: Date.now(), hechos: {} };
   guardar("Entrenando");
