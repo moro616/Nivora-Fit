@@ -316,7 +316,9 @@ async function hojaPagos() {
         : "Débito automático mensual con Mercado Pago. Cancelás cuando quieras."}</p>
     </div>
 
-    ${activa || admin ? "" : `<button class="btn block" id="pg-suscribir" style="margin-top:14px">Suscribirme con Mercado Pago</button>`}
+    ${activa || admin ? "" : `<div class="field" style="margin:14px 0 0"><label for="mp-email">Mail de tu cuenta de Mercado Pago <small>tiene que ser el mismo con el que entrás a Mercado Pago</small></label>
+        <input id="mp-email" type="email" inputmode="email" autocomplete="email" value="${esc((Cuenta.usuario && Cuenta.usuario.email) || "")}"></div>
+      <button class="btn block" id="pg-suscribir" style="margin-top:10px">Suscribirme con Mercado Pago</button>`}
     <p class="sm" id="pg-error" style="color:var(--bad);margin:8px 0 0;min-height:1px"></p>
 
     <label class="lbl" style="margin-top:14px">Comprobantes</label>
@@ -413,13 +415,21 @@ function pintarCabeceraPlan() {
 /* Abre el checkout de Mercado Pago. Lo usan el muro y la hoja de pagos. */
 async function irAPagar(boton, cajaError) {
   const txt = boton.textContent;
+  const campo = document.getElementById("mp-email");
+  const emailMp = campo ? campo.value.trim().toLowerCase() : "";
+  if (campo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailMp)) {
+    if (cajaError) cajaError.textContent = "Revisá el mail de Mercado Pago.";
+    campo.focus();
+    return;
+  }
   boton.disabled = true; boton.textContent = "Abriendo Mercado Pago…";
   if (cajaError) cajaError.textContent = "";
   try {
     const { data: { session } } = await SB.auth.getSession();
     const r = await fetch("/.netlify/functions/crear-suscripcion", {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token }
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + session.access_token },
+      body: JSON.stringify({ email_mp: emailMp || undefined })
     });
     const j = await r.json();
     if (!r.ok || !j.init_point) throw new Error(j.error || "sin init_point");

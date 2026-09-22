@@ -373,6 +373,8 @@ function mostrarMuroPago() {
         desde acá o desde tu cuenta de Mercado Pago.</p>
       </div>
       <p class="sm" id="mu-error" style="color:var(--bad);margin:0 0 10px;min-height:18px"></p>
+      <div class="field" style="margin:0 0 12px"><label for="mp-email">Mail de tu cuenta de Mercado Pago <small>tiene que ser el mismo con el que entrás a Mercado Pago</small></label>
+        <input id="mp-email" type="email" inputmode="email" autocomplete="email" value="${esc((Cuenta.usuario && Cuenta.usuario.email) || "")}"></div>
       <button class="btn block" id="mu-suscribir">Suscribirme con Mercado Pago</button>
       <button class="btn ghost block" id="mu-refrescar" style="margin-top:8px">Ya pagué, actualizar mi estado</button>
       <button class="btn ghost block" id="mu-salir" style="margin-top:8px">Cerrar sesión</button>

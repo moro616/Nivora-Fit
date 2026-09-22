@@ -12,7 +12,10 @@ const { admin, json, mp } = require("../lib/comun");
 
 /* Verifica la firma del webhook (x-signature). Evita que cualquiera
    nos mande una notificación falsa diciendo que pagó. */
-function firmaValida(event, dataId) {
+function firmaValida(event, dataIdCuerpo) {
+  /* Mercado Pago firma el id que manda en la URL (?data.id=), en minúsculas. */
+  const q = event.queryStringParameters || {};
+  const dataId = String(q["data.id"] || q.id || dataIdCuerpo || "").toLowerCase();
   const secreto = process.env.MP_WEBHOOK_SECRET;
   if (!secreto) return true;                      // sin secreto configurado, no validamos
   const firma = event.headers["x-signature"] || event.headers["X-Signature"];
@@ -48,10 +51,10 @@ exports.handler = async (event) => {
   const id = (cuerpo.data && cuerpo.data.id) || cuerpo.id;
   if (!id) return json(200, { ok: true });
 
-  if (!firmaValida(event, id)) {
-    console.warn("webhook con firma inválida, lo ignoramos");
-    return json(200, { ok: true });
-  }
+  /* Aunque la firma no coincida, NO se confía en el contenido del aviso:
+     el estado real siempre se vuelve a pedir a la API de Mercado Pago con
+     nuestro token. Una notificación falsa no puede activar a nadie. */
+  if (!firmaValida(event, id)) console.warn("webhook: firma no coincide; se verifica igual contra la API de Mercado Pago");
 
   try {
     if (tipo === "subscription_preapproval" || tipo === "preapproval") {
@@ -60,6 +63,13 @@ exports.handler = async (event) => {
       if (!usuarioId) return json(200, { ok: true });
 
       const estado = ESTADOS[s.status] || "vencida";
+      /* Un intento viejo que quedó abandonado (por ejemplo, con otro mail)
+         no puede pisar el estado de la suscripción vigente. */
+      const { data: actual } = await admin.from("perfiles").select("mp_preapproval_id, suscripcion_estado").eq("id", usuarioId).maybeSingle();
+      if (actual && actual.mp_preapproval_id && actual.mp_preapproval_id !== s.id && s.status !== "authorized") {
+        console.log("webhook: aviso de una suscripción que ya no es la vigente, se ignora", s.id);
+        return json(200, { ok: true });
+      }
       await admin.from("perfiles").update({
         suscripcion_estado: estado,
         mp_preapproval_id: s.id,

@@ -17,6 +17,14 @@ exports.handler = async (event) => {
   const usuario = await usuarioDelToken(event);
   if (!usuario) return json(401, { error: "sesión no válida" });
 
+  /* Mercado Pago pide que el mail del pagador sea el de la cuenta de
+     Mercado Pago con la que va a pagar, que puede no ser el de la app. */
+  let emailMp = usuario.email;
+  try {
+    const c = JSON.parse(event.body || "{}");
+    if (c.email_mp && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(c.email_mp) && c.email_mp.length < 120) emailMp = c.email_mp.trim().toLowerCase();
+  } catch (e) { /* sin cuerpo: usamos el mail de la cuenta */ }
+
   try {
     // ¿Ya tiene una suscripción viva? No creamos una segunda.
     const { data: perfil } = await admin
@@ -27,7 +35,8 @@ exports.handler = async (event) => {
       try {
         const actual = await mp("/preapproval/" + perfil.mp_preapproval_id);
         if (actual.status === "authorized") return json(200, { ya_activa: true, init_point: actual.init_point });
-        if (actual.status === "pending" && actual.init_point) return json(200, { init_point: actual.init_point });
+        if (actual.status === "pending" && actual.init_point && (actual.payer_email || "").toLowerCase() === emailMp)
+          return json(200, { init_point: actual.init_point });
       } catch (e) { /* si no existe más, seguimos y creamos una nueva */ }
     }
 
@@ -40,7 +49,7 @@ exports.handler = async (event) => {
       body: JSON.stringify({
         reason: (process.env.APP_NOMBRE || "Nivora Fit") + " — plan mensual",
         external_reference: usuario.id,          // así el webhook sabe de quién es
-        payer_email: usuario.email,
+        payer_email: emailMp,
         back_url: urlDeLaApp() + "?suscripcion=ok",
         status: "pending",
         auto_recurring: {
