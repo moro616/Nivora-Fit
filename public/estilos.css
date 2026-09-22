@@ -872,3 +872,28 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .musica-txt small { display: block; font-size: 11.5px; color: var(--muted); }
 .musica-chips { display: flex; gap: 6px; flex-wrap: wrap; width: 100%; }
 .musica-chips a { text-decoration: none; }
+
+/* ============================================================
+   v16 — bloques de entrenamiento
+   ============================================================ */
+.fase-chip { display: inline-flex; align-items: center; gap: 8px; margin: 12px 0 0; padding: 6px 12px 6px 10px;
+  border-radius: 999px; border: 1px solid var(--linea-2); background: transparent; color: var(--muted);
+  font: 500 12px var(--f-body); cursor: pointer; }
+.fase-chip b { color: var(--ink); font-weight: 600; }
+.fase-chip::after { content: "›"; font-size: 15px; line-height: 1; color: var(--muted); }
+.rir-obj { font-size: 12.5px; color: var(--muted); }
+.bloque-linea { display: flex; gap: 4px; margin-top: 12px; }
+.bl-sem { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.bl-sem i { display: block; width: 100%; height: 8px; border-radius: 4px; background: var(--linea); }
+.bl-sem.hecha i { background: var(--muted); }
+.bl-sem.hoy i { background: var(--ink); height: 10px; }
+.bl-sem.f-descarga i { background-image: repeating-linear-gradient(45deg, transparent 0 3px, rgba(127,127,127,.35) 3px 5px); }
+.bl-sem small { font-size: 10.5px; color: var(--muted); font-family: var(--f-num); }
+.bl-sem.hoy small { color: var(--ink); font-weight: 600; }
+.fases-lista { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.fases-lista > div { padding: 12px 14px; border-radius: var(--r-s); background: var(--card-2); border: 1px solid transparent; }
+.fases-lista > div.actual { border-color: var(--ink); }
+.fases-lista b { font-size: 14px; color: var(--ink); }
+.fases-lista small { margin-left: 8px; font-size: 11.5px; color: var(--muted); }
+.fases-lista p { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
+.bloque-card { display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; margin-bottom: 12px; }

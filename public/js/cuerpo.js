@@ -17,7 +17,8 @@ const OBJETIVOS = {
   bajar:    { nombre: "Bajar de peso",        ajuste: -0.20, proteina: 2.0, reps: [12, 15], descanso: 50 },
   recomponer:{ nombre: "Bajar grasa y tonificar", ajuste: -0.10, proteina: 2.0, reps: [10, 12], descanso: 70 },
   musculo:  { nombre: "Ganar músculo",        ajuste:  0.10, proteina: 1.8, reps: [8, 12],  descanso: 90 },
-  salud:    { nombre: "Salud y estado físico", ajuste: 0,     proteina: 1.6, reps: [10, 12], descanso: 70 }
+  salud:    { nombre: "Salud y estado físico", ajuste: 0,     proteina: 1.6, reps: [10, 12], descanso: 70 },
+  fuerza:   { nombre: "Ganar fuerza",          ajuste: 0.05,  proteina: 1.8, reps: [4, 6],   descanso: 150 }
 };
 
 const NIVELES = {

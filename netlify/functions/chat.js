@@ -89,13 +89,28 @@ const OBJETIVOS = {
   bajar:      { nombre: "bajar de peso", ajuste: -0.20, reps: "12 a 15" },
   recomponer: { nombre: "bajar grasa y tonificar", ajuste: -0.10, reps: "10 a 12" },
   musculo:    { nombre: "ganar músculo", ajuste: 0.10, reps: "8 a 12" },
-  salud:      { nombre: "salud y estado físico general", ajuste: 0, reps: "10 a 12" }
+  salud:      { nombre: "salud y estado físico general", ajuste: 0, reps: "10 a 12" },
+  fuerza:     { nombre: "ganar fuerza", ajuste: 0.05, reps: "4 a 6" }
 };
 const NIVELES = { principiante: "principiante", intermedio: "intermedio", avanzado: "avanzado" };
 const EQUIPOS = { gimnasio: "gimnasio completo", mancuernas: "mancuernas en casa", casa: "solo peso corporal, en casa" };
 const ACTIVIDAD = { sedentario: 1.2, ligero: 1.375, moderado: 1.55, alto: 1.725 };
 const ACTIVIDAD_TXT = { sedentario: "trabajo sentado", ligero: "algo de movimiento en el día", moderado: "trabajo de pie o bastante caminata", alto: "trabajo físico pesado" };
 const LIMITACIONES = { rodilla: "rodillas", hombro: "hombros", espalda: "espalda baja", muneca: "muñecas" };
+
+/* Mismo cálculo de bloques que la app (programa.js). */
+const BLOQUES = {
+  principiante: [["Adaptación", 2], ["Progresión", 3], ["Descarga", 1]],
+  intermedio:   [["Acumulación", 2], ["Intensificación", 2], ["Descarga", 1]],
+  avanzado:     [["Acumulación", 2], ["Intensificación", 2], ["Realización", 1], ["Descarga", 1]]
+};
+function faseDe(p) {
+  const semanas = [];
+  (BLOQUES[p.nivel] || BLOQUES.principiante).forEach(([f, n]) => { for (let i = 0; i < n; i++) semanas.push(f); });
+  if (!p.programa || !p.programa.inicio) return null;
+  const idx = Math.floor(Math.max(0, (Date.now() - new Date(p.programa.inicio + "T00:00:00-03:00")) / 86400000) / 7);
+  return `semana ${idx % semanas.length + 1} de ${semanas.length}, fase de ${semanas[idx % semanas.length]}`;
+}
 
 const legible = id => String(id || "").replace(/-/g, " ");
 
@@ -129,7 +144,7 @@ async function armarContexto(usuarioId, perfil) {
     const tmb = 10 * peso + 6.25 * altura - 5 * edad + (p.sexo === "mujer" ? -161 : 5);
     const gasto = tmb * (ACTIVIDAD[p.actividad] || 1.375) + (p.dias || 3) * 300 / 7;
     kcal = Math.round(gasto * (1 + obj.ajuste) / 10) * 10;
-    proteina = Math.round(peso * (p.objetivo === "musculo" ? 1.8 : p.objetivo === "salud" ? 1.6 : 2));
+    proteina = Math.round(peso * (p.objetivo === "musculo" || p.objetivo === "fuerza" ? 1.8 : p.objetivo === "salud" ? 1.6 : 2));
   }
 
   const dias = f => Math.round((new Date(hoy) - new Date(f)) / 86400000);
@@ -157,6 +172,7 @@ async function armarContexto(usuarioId, perfil) {
     `Objetivo: ${obj.nombre}. Rango de repeticiones de su plan: ${obj.reps}.`,
     `Nivel: ${NIVELES[p.nivel] || p.nivel || "sin dato"}. Entrena en: ${EQUIPOS[p.equipo] || p.equipo || "sin dato"}. Meta: ${p.dias || 3} días por semana.`,
     `Fuera del gimnasio: ${ACTIVIDAD_TXT[p.actividad] || "sin dato"}.`,
+    faseDe(p) ? `Bloque de entrenamiento actual: ${faseDe(p)}. En Descarga baja series y peso a propósito; en Intensificación y Realización hace menos repeticiones con más peso.` : null,
     (p.limitaciones || []).length ? `Molestias declaradas: ${p.limitaciones.map(l => LIMITACIONES[l] || l).join(", ")}. Evitar cargar esas zonas.` : "Sin molestias declaradas.",
     kcal ? `Calorías diarias sugeridas por la app: ~${kcal} kcal, proteína ~${proteina} g (estimaciones).` : null,
     `Entrenamientos registrados en total: ${ses.length}. En los últimos 7 días: ${ses.filter(s => s.fecha >= hace7).length}.`,

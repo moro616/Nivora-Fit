@@ -170,10 +170,10 @@ function conectarHerramientas(it, i) {
    Cuando existan las listas propias de Nivora Fit, se ponen acá sus links
    (open.spotify.com/playlist/...) y reemplazan a las búsquedas. */
 const MUSICA = [
-  { id: "fuerza",   nombre: "Fuerza",    url: "https://open.spotify.com/search/gym%20fuerza%20motivacion/playlists" },
-  { id: "cardio",   nombre: "Cardio",    url: "https://open.spotify.com/search/cardio%20workout/playlists" },
-  { id: "correr",   nombre: "Correr",    url: "https://open.spotify.com/search/running%20160%20bpm/playlists" },
-  { id: "estirar",  nombre: "Estirar",   url: "https://open.spotify.com/search/stretching%20calm/playlists" }
+  { id: "fuerza",  nombre: "Fuerza",  url: "https://open.spotify.com/playlist/1kxvopu2JBqyYymvJ9siws" },
+  { id: "cardio",  nombre: "Cardio",  url: "https://open.spotify.com/playlist/3zXYeHNp0FlduIBN4W3Nyw" },
+  { id: "correr",  nombre: "Correr",  url: "https://open.spotify.com/playlist/5SC6fU5GBUjFLBtHEcMW9K" },
+  { id: "estirar", nombre: "Estirar", url: "https://open.spotify.com/playlist/1Rg5JFIsQ5TtctCfFfJasA" }
 ];
 
 function tarjetaMusica(sugerida) {

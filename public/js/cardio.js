@@ -148,8 +148,14 @@ async function pantallaEncendida() {
     }
   } catch (e) { /* sin permiso o sin soporte */ }
 }
+function soltarPantalla() {
+  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+/* El navegador suelta la pantalla cuando la app pasa a segundo plano:
+   al volver, se vuelve a pedir si hay un entrenamiento o una salida en curso. */
 document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible" && S.cardio && S.cardio.corriendo) pantallaEncendida();
+  if (document.visibilityState !== "visible") return;
+  if ((S.cardio && (S.cardio.corriendo || S.cardio.preparando)) || S.activa) pantallaEncendida();
 });
 
 function ritmoTexto(ms, metros) {

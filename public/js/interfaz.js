@@ -97,6 +97,7 @@ function pintar() {
   if (pie && !pie.innerHTML && typeof pieLegal === "function") pie.innerHTML = pieLegal();
 
   if (!S.perfil) return vistaSetup();
+  if (typeof asegurarPrograma === "function") asegurarPrograma();
   if (typeof revisarLogros === "function") setTimeout(revisarLogros, 400);
   if (activa === "hoy") return vistaHoy();
   if (activa === "agenda") return vistaAgenda();
@@ -293,6 +294,7 @@ function vistaHoy() {
       <p class="eyebrow">Hoy te toca</p>
       <h2>${esc(r.nombre)}</h2>
       <p class="sm muted" style="margin:6px 0 0">${esc(r.musculos)}</p>
+      ${chipFase()}
       <div class="datos">
         <div><b>${r.plan.length}</b><span>ejercicios</span></div>
         <div><b>${mins}′</b><span>aprox.</span></div>
@@ -319,6 +321,8 @@ function vistaHoy() {
     ${tarjetaInstalar()}`;
 
   document.getElementById("empezar").onclick = empezarSesion;
+  const vb = document.getElementById("ver-bloque");
+  if (vb) vb.onclick = hojaBloque;
   conectarTarjetaCardio();
   conectarClima();
   conectarAvisoPrueba();
@@ -445,12 +449,16 @@ function pintarSesion(v) {
     if (!confirm("¿Cancelás el entrenamiento? No se va a guardar.")) return;
     pararCrono(); cortarDescanso();
     S.activa = null; guardar(); pintar();
+    if (typeof soltarPantalla === "function") soltarPantalla();
   };
   const g = document.getElementById("guia-ok");
   if (g) g.onclick = () => { S.perfil.guiaSerie = true; guardar(); document.getElementById("guia").remove(); };
   document.getElementById("desc-cortar").onclick = cortarDescanso;
   document.getElementById("desc-mas").onclick = () => { if (descanso) { descanso.hasta += 15000; descanso.total += 15; } };
+  if (!descanso && a.descanso && a.descanso.hasta > Date.now() - 60000) descanso = { ...a.descanso };
   if (descanso) mostrarDescanso();
+  /* Pantalla prendida mientras dura el entrenamiento. */
+  if (typeof pantallaEncendida === "function") pantallaEncendida();
 }
 
 function tarjetaSesion(it, i) {
@@ -461,7 +469,8 @@ function tarjetaSesion(it, i) {
   const proxima = Array.from({ length: it.series }, (_, s) => s).find(s => !hechos[s]);
   const plan = `${it.series} ${it.series === 1 ? "serie" : "series"} de <b>${it.reps[0]}–${it.reps[1]} ${unidad}</b>` +
     (it.kg ? ` con <b>${redondear(it.kg, 1)} kg</b>` : "") +
-    (it.descanso ? ` · descanso ${it.descanso}″` : "");
+    (it.descanso ? ` · descanso ${it.descanso}″` : "") +
+    (it.rirObjetivo ? `<br><span class="rir-obj">Terminá cada serie con ${it.rirObjetivo} en reserva${it.fase === "descarga" ? " · semana de descarga" : ""}</span>` : "");
   return `<div class="strow${listo ? " listo" : ""}" data-i="${i}">
     <div class="sthead">
       <div>
@@ -662,6 +671,8 @@ function volumenActual() {
 let descanso = null, tDesc = null;
 function arrancarDescanso(seg) {
   descanso = { hasta: Date.now() + seg * 1000, total: seg };
+  /* Queda guardado: si el teléfono cierra la app, al volver sigue la cuenta. */
+  if (S.activa) { S.activa.descanso = { ...descanso }; lsSet(); }
   mostrarDescanso();
 }
 function mostrarDescanso() {
@@ -675,9 +686,10 @@ function mostrarDescanso() {
     txt.textContent = "Descanso " + fmtSeg(quedan);
     if (prog) prog.style.width = (100 - (quedan / descanso.total) * 100) + "%";
     if (quedan <= 0) {
+      const tarde = Math.round((Date.now() - descanso.hasta) / 1000);
       cortarDescanso();
       if (navigator.vibrate) navigator.vibrate([180, 90, 180]);
-      toast("Descanso terminado. Vamos con la que sigue.");
+      toast(tarde > 5 ? `Tu descanso terminó hace ${fmtSeg(tarde)}. Vamos con la que sigue.` : "Descanso terminado. Vamos con la que sigue.");
     }
   };
   tic();
@@ -687,6 +699,7 @@ function mostrarDescanso() {
 function cortarDescanso() {
   clearInterval(tDesc);
   descanso = null;
+  if (S.activa && S.activa.descanso) { delete S.activa.descanso; lsSet(); }
   const caja = document.getElementById("descanso");
   if (caja) caja.hidden = true;
 }
@@ -723,6 +736,7 @@ function terminarSesion() {
 
   S.activa = null;
   S.agenda = null;
+  if (typeof soltarPantalla === "function") soltarPantalla();
   guardar("Entrenamiento guardado");
   cortarDescanso();
   pintar();
@@ -755,6 +769,9 @@ function vistaAgenda() {
   const meta = S.perfil.dias || 3;
 
   v.innerHTML = `
+    ${(() => { const f = faseActual(); return `<button class="card pad bloque-card" id="agenda-bloque">
+      <div class="graf-head"><p class="eyebrow" style="margin:0">Tu bloque · semana ${f.semana} de ${f.total}</p><span class="delta">${esc(f.nombre)}</span></div>
+      ${lineaBloque(f)}<p class="sm muted" style="margin:10px 0 0">${esc(f.desc)}</p></button>`; })()}
     <div class="card pad">
       <p class="eyebrow">Esta semana</p>
       <h2 class="titulo chico">${semana.length} de ${meta} entrenamientos</h2>
@@ -788,6 +805,8 @@ function vistaAgenda() {
       ${rutaDe(s.id) ? "</button>" : "</div>"}`).join("")}</div>`
       : `<p class="vacio">Todavía no hay entrenamientos cargados. El primero aparece acá apenas lo termines.</p>`}`;
   v.querySelectorAll("[data-ruta]").forEach(b => b.onclick = () => verRuta(b.dataset.ruta));
+  const ab = document.getElementById("agenda-bloque");
+  if (ab) ab.onclick = hojaBloque;
 }
 
 function diaSemana(iso) { const d = new Date(iso + "T00:00:00").getDay(); return (d + 6) % 7; }

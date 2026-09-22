@@ -163,6 +163,16 @@ function actualizarProgresion(item, seriesHechas, repsLogradas, detalle) {
   if (!ej) return null;
   const previo = S.cargas[ej.id] || {};
   const sets = (detalle || []).filter(Boolean);
+  /* Semanas de intensificación, realización o descarga: se registra lo
+     hecho, pero el peso de trabajo no cambia. */
+  if (item.noProgresa) {
+    S.cargas[ej.id] = {
+      ...previo, kg: previo.kg != null ? previo.kg : (item.kgBase != null ? item.kgBase : item.kg),
+      fecha: previo.fecha || hoyISO(),
+      ultima: { fecha: hoyISO(), series: sets.map(s => ({ reps: s.reps, kg: s.kg || 0, rir: s.rir == null ? null : s.rir })) }
+    };
+    return null;
+  }
   const minReps = sets.length ? Math.min(...sets.map(s => s.reps)) : repsLogradas;
   const conRir = sets.filter(s => s.rir != null);
   const rirProm = conRir.length ? conRir.reduce((a, s) => a + s.rir, 0) / conRir.length : null;
@@ -222,6 +232,13 @@ function armarRutina(bloqueKey, perfil) {
       series: 1, reps: [(perfil && perfil.objetivo) === "bajar" ? 15 : 10, 20],
       porTiempo: true, minutos: true, descanso: 0, kg: 0, met: cardio.met
     });
+  }
+
+  /* La fase del bloque (acumulación, intensificación, descarga…) ajusta
+     series, repeticiones, peso y descansos. */
+  if (typeof faseActual === "function") {
+    const fase = faseActual(perfil);
+    plan.forEach(it => { const e = porId(it.id); aplicarFase(it, fase, (e && e.salto) || 2.5); });
   }
 
   return { bloque: bloqueKey, nombre: bloque.nombre, musculos: bloque.musculos, plan };
