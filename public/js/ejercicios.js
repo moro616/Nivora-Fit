@@ -84,7 +84,7 @@ const EJERCICIOS = [
     cuidado: "No tires la barra atrás de la nuca ni te balancees hacia atrás.",
     video: "jalon al pecho tecnica" },
 
-  { id: "dominadas", nombre: "Dominadas", grupo: "espalda", patron: "jalonVertical",
+  { id: "dominadas", nombre: "Dominadas", grupo: "espalda", patron: "dominada",
     equipo: "libre", nivel: 3, tipo: "compuesto", met: 8, salto: 0,
     como: "Colgado de la barra, subí hasta pasar el mentón llevando los codos al cuerpo.",
     cuidado: "Si todavía no salen, hacelas con banda elástica o saltando y bajando despacio.",
@@ -182,7 +182,7 @@ const EJERCICIOS = [
     cuidado: "Codos apuntando al techo, cerca de la cabeza.",
     video: "extension de triceps con mancuerna" },
 
-  { id: "fondos-banco", nombre: "Fondos en banco", grupo: "triceps", patron: "flexion",
+  { id: "fondos-banco", nombre: "Fondos en banco", grupo: "triceps", patron: "fondos",
     equipo: "libre", nivel: 1, tipo: "compuesto", met: 5, salto: 0,
     como: "Manos apoyadas en el borde de un banco, bajá el cuerpo doblando los codos y subí.",
     cuidado: "Si te molesta el hombro, bajá menos.",

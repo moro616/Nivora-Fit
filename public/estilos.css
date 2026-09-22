@@ -359,6 +359,11 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 /* ---------- dibujos de los movimientos ---------- */
 .dibujo { background: var(--card); border: 1px solid var(--linea); border-radius: var(--r); padding: 10px; margin: 14px 0; }
 .dibujo svg { width: 100%; height: auto; display: block; }
+/* Las figuras son siluetas: el torso y la cabeza van rellenos y los
+   miembros son trazos gruesos. El lado más lejano, más tenue. */
+.dibujo .sil { fill: var(--ink); stroke: var(--ink); stroke-width: 2; stroke-linejoin: round; }
+.dibujo .sil-t { fill: none; stroke: var(--ink); stroke-linecap: round; stroke-linejoin: round; }
+.dibujo .sil-l { fill: none; stroke: var(--ink); opacity: .38; stroke-linecap: round; stroke-linejoin: round; }
 .dibujo .body, .dibujo .head { fill: none; stroke: var(--ink); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; }
 .dibujo .head { fill: var(--card); }
 .dibujo .gear { stroke: var(--ink-2); stroke-width: 3.4; stroke-linecap: round; fill: none; }

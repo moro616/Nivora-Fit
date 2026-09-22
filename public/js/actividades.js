@@ -45,10 +45,10 @@ const EJ_NUEVOS = [
   { id: "remo-australiano", nombre: "Remo australiano", grupo: "espalda", patron: "remoHorizontal", equipo: "cali", nivel: 2, tipo: "compuesto", met: 6, salto: 0,
     como: "Igual que el inclinado, pero con la barra más baja y el cuerpo casi horizontal. Pecho a la barra en cada repetición.",
     cuidado: "No subas con el cuello: el que llega a la barra es el pecho.", video: "remo australiano tecnica" },
-  { id: "dominada-negativa", nombre: "Dominadas negativas", grupo: "espalda", patron: "jalonVertical", equipo: "cali", nivel: 2, tipo: "compuesto", met: 7, salto: 0, barra: true,
+  { id: "dominada-negativa", nombre: "Dominadas negativas", grupo: "espalda", patron: "dominada", equipo: "cali", nivel: 2, tipo: "compuesto", met: 7, salto: 0, barra: true,
     como: "Subí saltando o con una silla hasta tener el mentón sobre la barra y bajá lo más lento que puedas, en 3 a 5 segundos.",
     cuidado: "Bajá controlado hasta estirar del todo los brazos. Cada bajada es una repetición.", video: "dominadas negativas" },
-  { id: "dominada-pausa", nombre: "Dominadas con pausa arriba", grupo: "espalda", patron: "jalonVertical", equipo: "cali", nivel: 3, tipo: "compuesto", met: 8, salto: 0, barra: true,
+  { id: "dominada-pausa", nombre: "Dominadas con pausa arriba", grupo: "espalda", patron: "dominada", equipo: "cali", nivel: 3, tipo: "compuesto", met: 8, salto: 0, barra: true,
     como: "Una dominada común, pero aguantá dos segundos con el mentón sobre la barra antes de bajar.",
     cuidado: "Nada de balanceo ni patadas para subir.", video: "dominadas con pausa" },
 

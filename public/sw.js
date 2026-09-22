@@ -11,7 +11,7 @@
    Al publicar cambios grandes, subí VERSION: se borra lo viejo.
    ============================================================ */
 
-const VERSION = "nivora-v21";
+const VERSION = "nivora-v23";
 const PACIENCIA = 3500;
 
 /* Lo mínimo para que la app arranque sin conexión. */
@@ -30,6 +30,7 @@ const BASE = [
   "/icono-512.png",
   "/icono-maskable.png",
   "/marca/nivora-fit-blanco.png",
+  "/js/figura.js",
   "/js/dibujos.js",
   "/js/ejercicios.js",
   "/js/cuerpo.js",
