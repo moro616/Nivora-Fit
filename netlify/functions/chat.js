@@ -114,6 +114,11 @@ function faseDe(p) {
 
 const legible = id => String(id || "").replace(/-/g, " ");
 
+/* Los tipos de sesión que guarda la app. Las viejas no tienen tipo: son de gimnasio. */
+const TIPOS = { gimnasio: "gimnasio", calistenia: "calistenia", hiit: "funcional/HIIT", movilidad: "movilidad y estiramiento",
+  bici: "bicicleta fija", cinta: "cinta", eliptico: "elíptico", correr: "correr", caminar: "caminar" };
+const tipoDe = s => s.tipo || (s.km != null ? "correr" : "gimnasio");
+
 function edadDe(p) {
   if (p.edad) return p.edad;
   if (!p.nacimiento) return null;
@@ -151,10 +156,17 @@ async function armarContexto(usuarioId, perfil) {
   const hace30 = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
   const hace7 = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
   const ult30 = ses.filter(s => s.fecha >= hace30);
-  const gym30 = ult30.filter(s => s.km == null);
+  const gym30 = ult30.filter(s => s.km == null && tipoDe(s) === "gimnasio");
   const cardio30 = ult30.filter(s => s.km != null);
+  const otras30 = {};
+  ult30.filter(s => s.km == null && tipoDe(s) !== "gimnasio").forEach(s => {
+    const t = TIPOS[tipoDe(s)] || tipoDe(s);
+    otras30[t] = otras30[t] || { n: 0, min: 0 };
+    otras30[t].n++; otras30[t].min += s.min || 0;
+  });
+  const caliActual = p.cali && p.cali.actual ? Object.entries(p.cali.actual).map(([k, v]) => `${k.toLowerCase()}: ${v}`).join("; ") : "";
   const grupos = {};
-  gym30.forEach(s => Object.entries(s.grupos || {}).forEach(([g, n]) => { grupos[g] = (grupos[g] || 0) + n; }));
+  ult30.filter(s => s.km == null).forEach(s => Object.entries(s.grupos || {}).forEach(([g, n]) => { grupos[g] = (grupos[g] || 0) + n; }));
   const ultimaSesion = ses[ses.length - 1];
 
   const cargas = Object.entries(d.cargas || {})
@@ -178,14 +190,19 @@ async function armarContexto(usuarioId, perfil) {
     `Entrenamientos registrados en total: ${ses.length}. En los últimos 7 días: ${ses.filter(s => s.fecha >= hace7).length}.`,
     ultimaSesion ? `Último entrenamiento: ${ultimaSesion.nombre || legible(ultimaSesion.bloque)}, hace ${dias(ultimaSesion.fecha)} días.` : "Todavía no registró entrenamientos.",
     Object.keys(grupos).length ? `Series por músculo en 30 días: ${Object.entries(grupos).sort((a, b) => b[1] - a[1]).map(([g, n]) => `${g} ${n}`).join(", ")}.` : null,
+    Object.keys(otras30).length ? `Otras actividades en 30 días: ${Object.entries(otras30).map(([t, x]) => `${t} ${x.n} ${x.n === 1 ? "vez" : "veces"} (${x.min} min)`).join(", ")}.` : null,
+    caliActual ? `Calistenia, variante actual de cada movimiento: ${caliActual}.${p.cali.barra ? " Tiene barra para colgarse." : " No tiene barra para colgarse."}` : null,
     cardio30.length ? `Salidas a correr o caminar en 30 días: ${cardio30.length}, ${cardio30.reduce((a, s) => a + (s.km || 0), 0).toFixed(1)} km en total.` : null,
     cargas ? `Cargas actuales: ${cargas}.` : null
   ].filter(Boolean).join("\n");
 
-  const sesiones_texto = ses.slice(-8).reverse().map(s => s.km != null
-    ? `${s.fecha}: ${s.nombre || legible(s.bloque)}, ${s.km} km en ${s.min} min, ${s.kcal} kcal`
-    : `${s.fecha}: ${s.nombre || legible(s.bloque)}, ${s.series} series, ${s.min} min, ${Math.round(s.volumen || 0)} kg movidos`
-  ).join("\n") || "Todavía no registró ninguna sesión.";
+  const sesiones_texto = ses.slice(-8).reverse().map(s => {
+    const t = tipoDe(s), nombre = s.nombre || legible(s.bloque);
+    if (s.km != null) return `${s.fecha}: ${nombre}, ${s.km} km en ${s.min} min, ${s.kcal} kcal`;
+    if (t === "gimnasio") return `${s.fecha}: gimnasio, ${nombre}, ${s.series} series, ${s.min} min, ${Math.round(s.volumen || 0)} kg movidos`;
+    if (t === "calistenia") return `${s.fecha}: calistenia, ${nombre}, ${s.series} series, ${s.min} min`;
+    return `${s.fecha}: ${TIPOS[t] || t}, ${nombre}, ${s.min} min, ${s.kcal} kcal`;
+  }).join("\n") || "Todavía no registró ninguna sesión.";
 
   return {
     ficha_texto: ficha,

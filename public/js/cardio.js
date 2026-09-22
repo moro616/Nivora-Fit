@@ -54,7 +54,7 @@ let gpsId = null, tCardio = null, wakeLock = null;
 /* Tocar Correr o Caminar NO arranca el reloj: primero se busca señal de GPS
    y la persona toca "Empezar" cuando está lista. */
 function empezarCardio(tipo) {
-  if (S.activa) return toast("Terminá primero el entrenamiento de gimnasio.");
+  if (S.activa || S.guiada) return toast("Terminá primero lo que tenés en curso.");
   S.cardio = { tipo, fecha: hoyISO(), preparando: true, inicio: null, acumulado: 0, corriendo: false,
                desde: null, metros: 0, ultimo: null, gps: "buscando", parciales: [], ruta: [] };
   lsSet();
@@ -155,7 +155,7 @@ function soltarPantalla() {
    al volver, se vuelve a pedir si hay un entrenamiento o una salida en curso. */
 document.addEventListener("visibilitychange", () => {
   if (document.visibilityState !== "visible") return;
-  if ((S.cardio && (S.cardio.corriendo || S.cardio.preparando)) || S.activa) pantallaEncendida();
+  if ((S.cardio && (S.cardio.corriendo || S.cardio.preparando)) || S.activa || S.guiada) pantallaEncendida();
 });
 
 function ritmoTexto(ms, metros) {

@@ -124,7 +124,7 @@ function hojaCambiar(it, i) {
     toast(`${previo} → ${e.nombre}`);
   });
 }
-const EQUIPOS_TXT = { maquina: "máquina", polea: "polea", barra: "barra", mancuernas: "mancuernas", banco: "banco", libre: "peso corporal", cardio: "cardio" };
+const EQUIPOS_TXT = { maquina: "máquina", polea: "polea", barra: "barra", mancuernas: "mancuernas", banco: "banco", libre: "peso corporal", cardio: "cardio", cali: "peso corporal", funcional: "funcional", movilidad: "movilidad" };
 
 /* ---------- notas por ejercicio ---------- */
 function notaDe(id) { return (S.perfil && S.perfil.notas && S.perfil.notas[id]) || ""; }
@@ -147,7 +147,8 @@ function hojaNota(it) {
 function herramientasTarjeta(it, i, hechas) {
   const ej = porId(it.id);
   const nota = notaDe(it.id);
-  const botones = [
+  const botones = it.cadena ? [herramientasCali(it, i, hechas),
+    `<button class="herr" data-nota="${i}">${nota ? "Editar nota" : "Nota"}</button>`].join("") : [
     ej && ej.equipo === "barra" && it.kg ? `<button class="herr" data-discos="${i}">Discos</button>` : "",
     !hechas ? `<button class="herr" data-cambiar="${i}">Cambiar</button>` : "",
     `<button class="herr" data-nota="${i}">${nota ? "Editar nota" : "Nota"}</button>`
@@ -156,6 +157,7 @@ function herramientasTarjeta(it, i, hechas) {
 }
 
 function conectarHerramientas(it, i) {
+  if (it.cadena) conectarHerramientasCali(it, i);
   const d = document.querySelector(`[data-discos="${i}"]`);
   if (d) d.onclick = () => hojaDiscos(it.kg);
   const c = document.querySelector(`[data-cambiar="${i}"]`);

@@ -13,6 +13,7 @@ const S = {
   activa: null,    /* el entrenamiento en curso, si hay uno */
   agenda: null,    /* la rutina de hoy ya armada */
   cardio: null,    /* la salida a correr o caminar en curso */
+  guiada: null,    /* movilidad, HIIT o cardio adentro en curso */
   vista: "hoy",
   updated: 0
 };
@@ -52,6 +53,7 @@ function snapshot(paraNube) {
     perfil: S.perfil, medidas: S.medidas, cargas: S.cargas,
     sesiones: S.sesiones.slice(-3000), activa: S.activa, agenda: S.agenda,
     cardio: S.cardio && (paraNube ? { ...S.cardio, ultimo: null, ruta: null } : S.cardio),
+    guiada: S.guiada,
     updated: S.updated || Date.now()
   };
 }
@@ -64,6 +66,7 @@ function restaurar(d) {
   S.activa = d.activa || null;
   S.agenda = d.agenda || null;
   S.cardio = d.cardio || null;
+  S.guiada = d.guiada || null;
   S.updated = d.updated || 0;
   asegurarIds();
 }

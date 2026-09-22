@@ -298,9 +298,10 @@ function ajustarHistorial(antes) {
   }
 }
 
-function abrirDetalleRutina() {
+function abrirDetalleRutina() { abrirSub("rutina"); }
+function abrirSub(nombre) {
   const antes = enNivelUno();
-  Entrenar.sub = "rutina";
+  Entrenar.sub = nombre;
   ajustarHistorial(antes);
   pintar();
   window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
@@ -318,10 +319,11 @@ const TITULOS = { agenda: "Agenda", ejercicios: "Ejercicios", cuerpo: "Tu cuerpo
 function pintarBarraVolver() {
   const b = document.getElementById("barra-volver");
   if (!b) return;
-  const titulo = !S.perfil ? "" : S.vista === "hoy" ? (Entrenar.sub && !S.activa && !S.cardio ? "Rutina de hoy" : "")
+  const titulo = !S.perfil ? "" : S.vista === "hoy"
+    ? (Entrenar.sub && !S.activa && !S.cardio && !S.guiada ? ({ rutina: "Rutina de hoy", cali: "Calistenia" }[Entrenar.sub] || "") : "")
     : TITULOS[S.vista] || "";
   if (!titulo) { b.hidden = true; b.innerHTML = ""; return; }
-  const destino = S.activa ? "Volver al entrenamiento" : S.cardio ? "Volver a la salida" : "Entrenar";
+  const destino = S.activa ? "Volver al entrenamiento" : S.cardio ? "Volver a la salida" : S.guiada ? "Volver a la sesión" : "Entrenar";
   b.hidden = false;
   b.innerHTML = `<button class="volver" id="btn-volver" aria-label="Volver a ${esc(destino)}">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg><span>${esc(destino)}</span></button>
@@ -340,8 +342,10 @@ function vistaHoy() {
   const r = rutinaDeHoy();
 
   if (S.cardio) return pintarCardio(v);
+  if (S.guiada) return pintarGuiada(v);
   if (S.activa) return pintarSesion(v);
   if (Entrenar.sub === "rutina") return detalleRutina(v, r);
+  if (Entrenar.sub === "cali") return detalleCalistenia(v);
   return menuEntrenar(v, r);
 }
 
@@ -398,6 +402,8 @@ function menuEntrenar(v, r) {
       ${filaMenu("poco-tiempo", "Rutina corta", "La de hoy, recortada a 20, 30 o 45 minutos", ICO_ENTRENAR.reloj)}
     </div>
 
+    ${seccionActividades()}
+
     <p class="eyebrow" style="margin:22px 2px 10px">Al aire libre</p>
     ${tarjetaClima()}
     <div class="menu">
@@ -417,6 +423,7 @@ function menuEntrenar(v, r) {
   document.getElementById("m-caminar").onclick = () => empezarCardio("caminar");
   document.getElementById("cardio-manual").onclick = cardioManual;
   conectarAccesos();
+  conectarActividades();
   conectarClima();
   conectarAvisoPrueba();
   conectarInstalar();
@@ -539,7 +546,7 @@ function fichaEjercicio(id) {
       <button class="xbtn" id="sheet-close" aria-label="Cerrar">✕</button>
     </div>
     <p class="eyebrow">${esc(GRUPOS[e.grupo] || "")} · ${esc(EQUIPO_NOMBRE(e.equipo))}</p>
-    <div class="dibujo">${patternSVG(e.patron, e.nombre)}</div>
+    ${patternSVG(e.patron, e.nombre) ? `<div class="dibujo">${patternSVG(e.patron, e.nombre)}</div>` : ""}
     <p class="cuerpo">${esc(e.como)}</p>
     <div class="ojo"><b>Ojo con esto</b><p>${esc(e.cuidado)}</p></div>
     ${carga ? `<p class="sm muted">Tu última carga: <b>${redondear(carga.kg, 1)} kg</b> · ${esc(diaRelativo(carga.fecha))}</p>` : ""}
@@ -548,13 +555,15 @@ function fichaEjercicio(id) {
 
 const EQUIPO_NOMBRE = e => ({
   maquina: "Máquina", polea: "Polea", barra: "Barra", mancuernas: "Mancuernas",
-  banco: "Banco", cardio: "Cardio", libre: "Sin equipo"
+  banco: "Banco", cardio: "Cardio", libre: "Sin equipo",
+  cali: "Calistenia", funcional: "Funcional", movilidad: "Movilidad"
 }[e] || e);
 
 /* ============================================================
    SESIÓN EN CURSO
    ============================================================ */
 function empezarSesion() {
+  if (S.guiada || S.cardio) return toast("Terminá primero lo que tenés en curso.");
   cerrarDetalleRutina();
   const r = rutinaDeHoy();
   S.activa = { ...r, fecha: hoyISO(), inicio: Date.now(), hechos: {} };
@@ -877,7 +886,8 @@ function terminarSesion() {
   });
   pararCrono();
 
-  S.sesiones.push({ id: nuevoId(), fecha: a.fecha, bloque: a.bloque, nombre: a.nombre, tipo: "gimnasio", series, min, kcal, volumen, grupos });
+  const tipo = a.tipo || "gimnasio";
+  S.sesiones.push({ id: nuevoId(), fecha: a.fecha, bloque: a.bloque, nombre: a.nombre, tipo, series, min, kcal, volumen, grupos });
 
   /* Progresión: quien completó todo arriba del rango, la próxima sube. */
   const subieron = [], bajaron = [];
@@ -890,8 +900,9 @@ function terminarSesion() {
     if (r && r.cambio === "baja") bajaron.push(it.nombre);
   });
 
+  const cali = tipo === "calistenia" ? progresarCalistenia(a) : null;
   S.activa = null;
-  S.agenda = null;
+  if (tipo === "gimnasio") S.agenda = null;
   if (typeof soltarPantalla === "function") soltarPantalla();
   guardar("Entrenamiento guardado");
   cortarDescanso();
@@ -906,10 +917,14 @@ function terminarSesion() {
       <div><b>${kcal}</b><span>kcal aprox.</span></div>
     </div>
     ${volumen ? `<p class="cuerpo">Moviste <b>${redondear(volumen, 0)} kg</b> en total entre todas las series.</p>` : ""}
-    ${subieron.length
+    ${cali ? (cali.suben.length
+      ? `<div class="ojo bien"><b>La próxima subís de nivel</b><p>${esc(cali.suben.join(" · "))}. Dominaste la variante, toca una más difícil.</p></div>`
+      : `<p class="cuerpo">Quedó registrado. Cuando hagas todas las series en el tope del rango, pasás a la variante siguiente.</p>`)
+      + (cali.bajan.length ? `<div class="ojo"><b>La próxima, una variante más fácil</b><p>${esc(cali.bajan.join(" · "))}. Así hacés más repeticiones bien hechas y progresás más rápido.</p></div>` : "")
+    : subieron.length
       ? `<div class="ojo bien"><b>La próxima subís peso</b><p>${esc(subieron.join(", "))}. Completaste el rango, así que toca sumar un escalón.</p></div>`
       : `<p class="cuerpo">Quedó registrado. Cuando completes todas las series en el tope de repeticiones, la app te va a subir el peso sola.</p>`}
-    ${bajaron.length ? `<div class="ojo"><b>La próxima bajamos un poco</b><p>${esc(bajaron.join(", "))}. Llegaste al fallo lejos del rango: con un escalón menos vas a hacer mejores repeticiones y progresar más rápido.</p></div>` : ""}
+    ${!cali && bajaron.length ? `<div class="ojo"><b>La próxima bajamos un poco</b><p>${esc(bajaron.join(", "))}. Llegaste al fallo lejos del rango: con un escalón menos vas a hacer mejores repeticiones y progresar más rápido.</p></div>` : ""}
     <button class="btn block" id="cerrar-resumen">Listo</button>`);
   document.getElementById("cerrar-resumen").onclick = () => cerrarSheet();
 }
@@ -956,7 +971,7 @@ function vistaAgenda() {
         <span class="exnum">${esc(fechaCorta(s.fecha).split(" ")[0])}</span>
         <span class="extxt"><b>${esc(s.nombre || BLOQUES[s.bloque] && BLOQUES[s.bloque].nombre || s.bloque)}</b>
           <small>${s.km != null ? redondear(s.km, 2) + " km · " + s.min + "′ · " + s.kcal + " kcal"
-            : s.series + " series · " + s.min + "′ · " + s.kcal + " kcal"}</small></span>
+            : (s.series ? s.series + " series · " : "") + s.min + "′ · " + s.kcal + " kcal"}</small></span>
         <span class="exver">${rutaDe(s.id) ? "ver mapa" : esc(fechaCorta(s.fecha))}</span>
       ${rutaDe(s.id) ? "</button>" : "</div>"}`).join("")}</div>`
       : `<p class="vacio">Todavía no hay entrenamientos cargados. El primero aparece acá apenas lo termines.</p>`}`;
@@ -986,7 +1001,7 @@ let grupoAbierto = "todos";
 function vistaEjercicios() {
   const chips = document.getElementById("lib-chips");
   const lista = document.getElementById("lib-list");
-  const pool = disponibles(S.perfil);
+  const pool = [...disponibles(S.perfil), ...EJERCICIOS.filter(e => EQUIPOS_EXTRA.includes(e.equipo))];
   const grupos = ["todos", ...Object.keys(GRUPOS).filter(g => pool.some(e => e.grupo === g))];
 
   chips.innerHTML = grupos.map(g =>

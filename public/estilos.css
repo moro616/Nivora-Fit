@@ -927,3 +927,24 @@ h1, h2, h3 { font-family: var(--f-marca); letter-spacing: -0.01em; margin: 0; }
 .fases-lista small { margin-left: 8px; font-size: 11.5px; color: var(--muted); }
 .fases-lista p { margin: 4px 0 0; font-size: 12.5px; color: var(--ink-2); line-height: 1.45; }
 .bloque-card { display: block; width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; margin-bottom: 12px; }
+
+/* ---------- sesión guiada (movilidad, HIIT, cardio adentro) ----------
+   En blanco y negro, como toda la app: cuando toca trabajar la tarjeta se
+   invierte, así se nota de lejos sin mirar el texto. */
+.guiada { padding: 22px 18px 18px; border-radius: 22px; background: var(--card); border: 1px solid var(--linea-2);
+  text-align: center; transition: background .25s ease, color .25s ease; }
+.guiada.fase-trabajo { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.guiada.fase-trabajo .eyebrow, .guiada.fase-trabajo .guiada-sub, .guiada.fase-trabajo .datos span,
+.guiada.fase-trabajo .linkbtn { color: var(--bg); opacity: .72; }
+.guiada.fase-trabajo .datos > div { background: transparent; border: 1px solid color-mix(in srgb, var(--bg) 25%, transparent); }
+.guiada.fase-trabajo .barra { background: color-mix(in srgb, var(--bg) 25%, transparent); }
+.guiada.fase-trabajo .barra i { background: var(--bg); }
+.guiada.pausada { opacity: .75; }
+.guiada-tit { font-family: var(--f-marca); font-size: clamp(22px, 6.4vw, 28px); font-weight: 800; line-height: 1.15; margin: 10px 0 0; }
+.guiada-sub { font-size: 13px; color: var(--muted); margin: 6px 0 0; min-height: 1em; }
+.guiada-reloj { font-family: var(--f-num); font-weight: 600; font-size: clamp(64px, 22vw, 96px); line-height: 1;
+  letter-spacing: -.03em; margin: 16px 0 4px; font-variant-numeric: tabular-nums; }
+.guiada .datos { margin-top: 16px; }
+.guiada-sig { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; margin: 12px 4px 0; font-size: 14px; color: var(--ink-2); }
+.guiada-sig span { font-size: 11.5px; color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .guiada { transition: none; } }

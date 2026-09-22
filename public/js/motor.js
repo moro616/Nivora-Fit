@@ -92,7 +92,8 @@ const splitDe = perfil => SPLITS[Math.min(6, Math.max(2, (perfil && perfil.dias)
 /* ---------- qué toca hoy ---------- */
 function siguienteBloque(perfil) {
   const split = splitDe(perfil);
-  const hechas = (S.sesiones || []).filter(s => s.km == null).slice(-12).map(s => s.bloque);
+  /* Solo cuenta el gimnasio: calistenia, HIIT o movilidad no corren la rotación. */
+  const hechas = (S.sesiones || []).filter(s => s.km == null && (!s.tipo || s.tipo === "gimnasio")).slice(-12).map(s => s.bloque);
   if (!hechas.length) return split[0];
 
   /* Buscamos el bloque del split que hace más tiempo no se hace. */
